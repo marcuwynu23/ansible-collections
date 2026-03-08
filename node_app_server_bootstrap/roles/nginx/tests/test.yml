@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    nginx_state: present
+  roles:
+  - roles/nginx

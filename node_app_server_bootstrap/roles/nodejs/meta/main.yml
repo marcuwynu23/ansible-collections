@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  author: Mark Wayne Menorca
+  description: Install or uninstall latest Node.js
+  license: MIT
+  min_ansible_version: "2.9"
+  galaxy_tags:
+  - nodejs
+dependencies: []

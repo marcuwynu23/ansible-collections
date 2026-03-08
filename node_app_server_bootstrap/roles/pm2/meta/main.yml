@@ -1,0 +1,10 @@
+galaxy_info:
+  author: Mark Wayne Menorca
+  description: Role to install and manage PM2 globally via npm
+  license: MIT
+  min_ansible_version: "2.1"
+  galaxy_tags:
+  - pm2
+  - nodejs
+  - process-manager
+  - npm

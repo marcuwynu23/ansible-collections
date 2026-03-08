@@ -1,0 +1,26 @@
+---
+# tasks file for roles/pm2
+
+- name: Set desired PM2 state
+  set_fact:
+    pm2_desired_state: "{{ pm2_state | default('present') }}"
+
+- name: Ensure PM2 is installed globally via npm
+  npm:
+    name: pm2
+    global: yes
+    state: "{{ pm2_desired_state }}"
+  become: true
+  environment:
+    PATH: "/usr/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  when: pm2_desired_state in ["present", "absent"]
+
+- name: Remove PM2 logs and directories if uninstalling
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+  - /root/.pm2
+  - "/home/{{ ansible_user_id }}/.pm2"
+  become: true
+  when: pm2_desired_state == "absent"

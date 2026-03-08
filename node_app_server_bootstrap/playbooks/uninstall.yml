@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    pm2_state: absent
+    node_state: absent
+    nginx_state: absent
+  roles:
+  - roles/pm2
+  - roles/nodejs
+  - roles/nginx

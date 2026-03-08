@@ -1,0 +1,59 @@
+---
+- name: Set desired Node.js state
+  set_fact:
+    node_desired_state: "{{ node_state | default('present') }}"
+
+- name: Install required packages
+  apt:
+    name:
+    - curl
+    - gnupg
+    - ca-certificates
+    state: present
+    update_cache: yes
+  become: true
+  when: node_desired_state == "present"
+
+- name: Add NodeSource GPG key
+  ansible.builtin.apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 1655A0AB68576280
+    state: present
+  become: true
+  when: node_desired_state == "present"
+
+- name: Add NodeSource Node.js 18 repository
+  ansible.builtin.apt_repository:
+    repo: "deb https://deb.nodesource.com/node_18.x {{ ansible_distribution_release }} main"
+    state: present
+    filename: nodesource
+  become: true
+  when: node_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: node_desired_state == "present"
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+  become: true
+  when: node_desired_state == "present"
+
+- name: Remove Node.js and NodeSource repo
+  apt:
+    name: nodejs
+    state: absent
+    purge: yes
+  become: true
+  when: node_desired_state == "absent"
+
+- name: Remove NodeSource repo file when uninstalling
+  file:
+    path: /etc/apt/sources.list.d/nodesource.list
+    state: absent
+  become: true
+  when: node_desired_state == "absent"
