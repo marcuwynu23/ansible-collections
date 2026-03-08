@@ -1,0 +1,13 @@
+namespace: marcuwynu23
+name: node_app_server_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Node.js + Nginx + PM2 stack (VPS ready for Node backend, Next.js, Vite, or Node apps)"
+license: MIT
+tags:
+- nodejs
+- nginx
+- pm2
+- vps
