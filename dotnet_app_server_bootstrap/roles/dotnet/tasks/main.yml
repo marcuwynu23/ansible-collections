@@ -1,0 +1,99 @@
+---
+- name: Set desired dotnet state and extract major distro version
+  set_fact:
+    dotnet_desired_state: "{{ dotnet_state | default('present') }}"
+    dotnet_major_version: "{{ dotnet_version | default('8.0') }}"
+    distro_major_version: "{{ ansible_distribution_version.split('.')[0] }}"
+
+- name: Install required packages
+  apt:
+    name:
+    - curl
+    - gnupg
+    - ca-certificates
+    - apt-transport-https
+    - software-properties-common
+    state: present
+    update_cache: yes
+  become: true
+  when: dotnet_desired_state == "present"
+
+- name: Add Microsoft GPG key
+  ansible.builtin.apt_key:
+    url: "https://packages.microsoft.com/keys/microsoft.asc"
+    state: present
+  become: true
+  when: dotnet_desired_state == "present"
+
+- name: Add Microsoft package repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/{{ distro_major_version }}/prod {{ ansible_distribution_release }} main"
+    state: present
+    filename: microsoft
+  become: true
+  when:
+  - dotnet_desired_state == "present"
+  - ansible_distribution == "Ubuntu"
+
+- name: Add Microsoft package repository (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/debian/{{ distro_major_version }}/prod {{ ansible_distribution_release }} main"
+    state: present
+    filename: microsoft
+  become: true
+  when:
+  - dotnet_desired_state == "present"
+  - ansible_distribution == "Debian"
+
+- name: Update apt cache after adding repo
+  apt:
+    update_cache: yes
+  become: true
+  when: dotnet_desired_state == "present"
+
+- name: Install .NET SDK and ASP.NET Core Runtime
+  apt:
+    name:
+    - "dotnet-sdk-{{ dotnet_major_version }}"
+    - "aspnetcore-runtime-{{ dotnet_major_version }}"
+    state: present
+  become: true
+  when: dotnet_desired_state == "present"
+
+- name: Remove .NET SDK and Runtime
+  apt:
+    name:
+    - "dotnet-sdk-{{ dotnet_major_version }}"
+    - "aspnetcore-runtime-{{ dotnet_major_version }}"
+    state: absent
+    purge: yes
+    autoremove: yes
+  become: true
+  when: dotnet_desired_state == "absent"
+
+- name: Remove Microsoft GPG key
+  ansible.builtin.apt_key:
+    url: "https://packages.microsoft.com/keys/microsoft.asc"
+    state: absent
+  become: true
+  when: dotnet_desired_state == "absent"
+
+- name: Remove Microsoft repo (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/ubuntu/{{ distro_major_version }}/prod {{ ansible_distribution_release }} main"
+    state: absent
+    filename: microsoft
+  become: true
+  when:
+  - dotnet_desired_state == "absent"
+  - ansible_distribution == "Ubuntu"
+
+- name: Remove Microsoft repo (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://packages.microsoft.com/debian/{{ distro_major_version }}/prod {{ ansible_distribution_release }} main"
+    state: absent
+    filename: microsoft
+  become: true
+  when:
+  - dotnet_desired_state == "absent"
+  - ansible_distribution == "Debian"

@@ -1,0 +1,5 @@
+---
+- name: Test dotnet role
+  hosts: localhost
+  roles:
+    - dotnet

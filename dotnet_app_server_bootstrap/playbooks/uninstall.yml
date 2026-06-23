@@ -1,0 +1,10 @@
+---
+- name: Uninstall .NET Application Server Stack
+  hosts: webservers
+  become: true
+  vars:
+    dotnet_state: absent
+    nginx_state: absent
+  roles:
+    - dotnet
+    - nginx

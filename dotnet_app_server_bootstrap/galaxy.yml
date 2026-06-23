@@ -1,0 +1,15 @@
+namespace: marcuwynu23
+name: dotnet_app_server_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for .NET/C# + Nginx stack (VPS ready for ASP.NET Core applications)"
+license: MIT
+tags:
+- dotnet
+- csharp
+- aspnet
+- nginx
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections

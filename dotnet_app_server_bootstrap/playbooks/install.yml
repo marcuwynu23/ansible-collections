@@ -1,0 +1,10 @@
+---
+- name: Install .NET Application Server Stack
+  hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    dotnet_state: present
+  roles:
+    - nginx
+    - dotnet

@@ -1,0 +1,9 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    dotnet_state: absent
+    nginx_state: absent
+  roles:
+  - roles/dotnet
+  - roles/nginx
