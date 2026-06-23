@@ -22,8 +22,8 @@
     state: present
   become: true
   when:
-    - golang_desired_state == "present"
-    - ansible_distribution == "Ubuntu"
+  - golang_desired_state == "present"
+  - ansible_distribution == "Ubuntu"
 
 - name: Update apt cache
   apt:
@@ -37,8 +37,8 @@
     state: present
   become: true
   when:
-    - golang_desired_state == "present"
-    - ansible_distribution == "Ubuntu"
+  - golang_desired_state == "present"
+  - ansible_distribution == "Ubuntu"
 
 - name: Install Go (Debian)
   apt:
@@ -46,25 +46,42 @@
     state: present
   become: true
   when:
-    - golang_desired_state == "present"
-    - ansible_distribution == "Debian"
+  - golang_desired_state == "present"
+  - ansible_distribution == "Debian"
 
-- name: Remove Go (Ubuntu)
+- name: Remove Go packages (Ubuntu)
   apt:
-    name: "golang-{{ golang_major_version }}"
+    name:
+    - "golang-{{ golang_major_version }}"
+    - "golang-go"
+    - "golang-src"
     state: absent
     purge: yes
+    autoremove: yes
   become: true
   when:
-    - golang_desired_state == "absent"
-    - ansible_distribution == "Ubuntu"
+  - golang_desired_state == "absent"
+  - ansible_distribution == "Ubuntu"
 
-- name: Remove Go (Debian)
+- name: Remove Go packages (Debian)
   apt:
-    name: "golang"
+    name:
+    - "golang"
+    - "golang-go"
+    - "golang-src"
     state: absent
     purge: yes
+    autoremove: yes
   become: true
   when:
-    - golang_desired_state == "absent"
-    - ansible_distribution == "Debian"
+  - golang_desired_state == "absent"
+  - ansible_distribution == "Debian"
+
+- name: Remove Go repository (Ubuntu only)
+  ansible.builtin.apt_repository:
+    repo: "ppa:longsleep/golang-backports"
+    state: absent
+  become: true
+  when:
+  - golang_desired_state == "absent"
+  - ansible_distribution == "Ubuntu"
