@@ -1,5 +1,5 @@
 ---
-- hosts: webservers
+- hosts: localhost
   become: true
   vars:
     php_state: absent
