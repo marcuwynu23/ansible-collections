@@ -1,5 +1,5 @@
 ---
-- hosts: webservers
+- hosts: localhost
   become: true
   vars:
     dotnet_state: absent
