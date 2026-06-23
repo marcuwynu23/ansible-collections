@@ -1,0 +1,132 @@
+---
+- name: Set desired php state
+  set_fact:
+    php_desired_state: "{{ php_state | default('present') }}"
+    php_major_version: "{{ php_version | default('8.3') }}"
+
+- name: Install required packages
+  apt:
+    name:
+    - curl
+    - gnupg
+    - ca-certificates
+    - lsb-release
+    - software-properties-common
+    - apt-transport-https
+    state: present
+    update_cache: yes
+  become: true
+  when: php_desired_state == "present"
+
+- name: Add Ondřej Surý GPG key
+  ansible.builtin.apt_key:
+    url: https://packages.sury.org/php/apt.gpg
+    state: present
+  become: true
+  when: php_desired_state == "present"
+
+- name: Add Ondřej Surý PHP repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "ppa:ondrej/php"
+    state: present
+  become: true
+  when:
+  - php_desired_state == "present"
+  - ansible_distribution == "Ubuntu"
+
+- name: Add Ondřej Surý PHP repository (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb https://packages.sury.org/php/ {{ ansible_distribution_release }} main"
+    state: present
+    filename: ondrej-php
+  become: true
+  when:
+  - php_desired_state == "present"
+  - ansible_distribution == "Debian"
+
+- name: Update apt cache after adding repo
+  apt:
+    update_cache: yes
+  become: true
+  when: php_desired_state == "present"
+
+- name: Install PHP and PHP-FPM with common extensions
+  apt:
+    name:
+    - "php{{ php_major_version }}-fpm"
+    - "php{{ php_major_version }}-cli"
+    - "php{{ php_major_version }}-common"
+    - "php{{ php_major_version }}-mysql"
+    - "php{{ php_major_version }}-curl"
+    - "php{{ php_major_version }}-gd"
+    - "php{{ php_major_version }}-mbstring"
+    - "php{{ php_major_version }}-xml"
+    - "php{{ php_major_version }}-zip"
+    - "php{{ php_major_version }}-bcmath"
+    - "php{{ php_major_version }}-opcache"
+    state: present
+  become: true
+  when: php_desired_state == "present"
+
+- name: Ensure PHP-FPM service is running
+  service:
+    name: "php{{ php_major_version }}-fpm"
+    state: started
+    enabled: true
+  become: true
+  when: php_desired_state == "present"
+
+- name: Stop PHP-FPM service when removing
+  service:
+    name: "php{{ php_major_version }}-fpm"
+    state: stopped
+    enabled: false
+  when: php_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove PHP and PHP-FPM
+  apt:
+    name:
+    - "php{{ php_major_version }}-fpm"
+    - "php{{ php_major_version }}-cli"
+    - "php{{ php_major_version }}-common"
+    - "php{{ php_major_version }}-mysql"
+    - "php{{ php_major_version }}-curl"
+    - "php{{ php_major_version }}-gd"
+    - "php{{ php_major_version }}-mbstring"
+    - "php{{ php_major_version }}-xml"
+    - "php{{ php_major_version }}-zip"
+    - "php{{ php_major_version }}-bcmath"
+    - "php{{ php_major_version }}-opcache"
+    state: absent
+    purge: yes
+    autoremove: yes
+  become: true
+  when: php_desired_state == "absent"
+
+- name: Remove Ondřej Surý PHP repository (Ubuntu)
+  ansible.builtin.apt_repository:
+    repo: "ppa:ondrej/php"
+    state: absent
+  become: true
+  when:
+  - php_desired_state == "absent"
+  - ansible_distribution == "Ubuntu"
+
+- name: Remove Ondřej Surý PHP repository (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb https://packages.sury.org/php/ {{ ansible_distribution_release }} main"
+    state: absent
+    filename: ondrej-php
+  become: true
+  when:
+  - php_desired_state == "absent"
+  - ansible_distribution == "Debian"
+
+- name: Remove Ondřej Surý GPG key
+  ansible.builtin.apt_key:
+    url: https://packages.sury.org/php/apt.gpg
+    state: absent
+  become: true
+  when: php_desired_state == "absent"

@@ -1,0 +1,9 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    php_state: present
+  roles:
+  - roles/nginx
+  - roles/php

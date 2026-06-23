@@ -1,0 +1,5 @@
+---
+- name: Test php role
+  hosts: localhost
+  roles:
+    - php

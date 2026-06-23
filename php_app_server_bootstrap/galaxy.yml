@@ -1,0 +1,14 @@
+namespace: marcuwynu23
+name: php_app_server_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for PHP + PHP-FPM + Nginx stack (VPS ready for any PHP application)"
+license: MIT
+tags:
+- php
+- nginx
+- phpfpm
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections

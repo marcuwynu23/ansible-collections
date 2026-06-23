@@ -1,0 +1,10 @@
+---
+- name: Uninstall PHP Application Server Stack
+  hosts: webservers
+  become: true
+  vars:
+    php_state: absent
+    nginx_state: absent
+  roles:
+    - php
+    - nginx
