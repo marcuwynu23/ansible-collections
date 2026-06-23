@@ -11,8 +11,14 @@
     - nginx-core
     state: present
     update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
   when: nginx_desired_state == "present"
   become: true
+  retries: 5
+  delay: 10
+  register: apt_nginx_install
+  until: apt_nginx_install is not failed
 
 - name: Ensure nginx service is running
   service:
@@ -39,5 +45,7 @@
     - nginx-core
     state: absent
     purge: yes
+    autoremove: yes
+    force_apt_get: yes
   when: nginx_desired_state == "absent"
   become: true
