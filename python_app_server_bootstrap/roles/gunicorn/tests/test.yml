@@ -1,0 +1,5 @@
+---
+- name: Test gunicorn role
+  hosts: localhost
+  roles:
+    - gunicorn

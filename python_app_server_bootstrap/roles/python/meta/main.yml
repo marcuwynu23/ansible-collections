@@ -1,0 +1,20 @@
+galaxy_info:
+  author: Mark Wayne
+  description: Python and pip installation
+  company: your company (optional)
+  license: MIT
+  min_ansible_version: 2.9
+  platforms:
+  - name: Ubuntu
+    versions:
+    - focal
+    - jammy
+    - noble
+  - name: Debian
+    versions:
+    - buster
+    - bullseye
+    - bookworm
+  galaxy_tags:
+  - python
+dependencies: []

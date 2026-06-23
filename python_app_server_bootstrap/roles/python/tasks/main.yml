@@ -1,0 +1,42 @@
+---
+- name: Set desired python state
+  set_fact:
+    python_desired_state: "{{ python_state | default('present') }}"
+
+- name: Install Python and development packages
+  apt:
+    name:
+    - python3-pip
+    - python3-venv
+    - python3-dev
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+    - python3-setuptools
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_python_install
+  until: apt_python_install is not failed
+  when: python_desired_state == "present"
+
+- name: Remove Python development packages (keep system python3)
+  apt:
+    name:
+    - python3-pip
+    - python3-venv
+    - python3-dev
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+    - python3-setuptools
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  become: true
+  when: python_desired_state == "absent"

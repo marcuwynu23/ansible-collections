@@ -1,0 +1,51 @@
+---
+- name: Set desired nginx state
+  set_fact:
+    nginx_desired_state: "{{ nginx_state | default('present') }}"
+
+- name: Install nginx stack
+  apt:
+    name:
+    - nginx
+    - nginx-common
+    - nginx-core
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  when: nginx_desired_state == "present"
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_nginx_install
+  until: apt_nginx_install is not failed
+
+- name: Ensure nginx service is running
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  when: nginx_desired_state == "present"
+  become: true
+
+- name: Stop nginx service when removing
+  service:
+    name: nginx
+    state: stopped
+    enabled: false
+  when: nginx_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove nginx stack
+  apt:
+    name:
+    - nginx
+    - nginx-common
+    - nginx-core
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: nginx_desired_state == "absent"
+  become: true

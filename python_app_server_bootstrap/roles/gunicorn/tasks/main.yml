@@ -1,0 +1,16 @@
+---
+- name: Set desired gunicorn state
+  set_fact:
+    gunicorn_desired_state: "{{ gunicorn_state | default('present') }}"
+
+- name: Ensure Gunicorn is installed via pip
+  pip:
+    name: gunicorn
+    state: "{{ gunicorn_desired_state }}"
+    executable: pip3
+  become: true
+  when: gunicorn_desired_state in ["present", "absent"]
+  retries: 5
+  delay: 10
+  register: pip_gunicorn_install
+  until: pip_gunicorn_install is not failed

@@ -1,0 +1,12 @@
+---
+- name: Install Python Application Server Stack
+  hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    python_state: present
+    gunicorn_state: present
+  roles:
+    - nginx
+    - python
+    - gunicorn

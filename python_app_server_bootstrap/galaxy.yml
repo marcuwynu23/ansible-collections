@@ -1,0 +1,16 @@
+namespace: marcuwynu23
+name: python_app_server_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Python + pip + Gunicorn + Nginx stack (VPS ready for Django, Flask, etc.)"
+license: MIT
+tags:
+- python
+- django
+- flask
+- gunicorn
+- nginx
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections

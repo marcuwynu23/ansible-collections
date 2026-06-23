@@ -1,0 +1,11 @@
+---
+- hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    python_state: present
+    gunicorn_state: present
+  roles:
+  - roles/nginx
+  - roles/python
+  - roles/gunicorn
