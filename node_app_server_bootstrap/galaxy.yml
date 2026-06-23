@@ -11,3 +11,4 @@ tags:
 - nginx
 - pm2
 - vps
+repository: https://github.com/marcuwynu23/ansible-collections
