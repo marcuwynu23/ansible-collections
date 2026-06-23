@@ -1,0 +1,10 @@
+---
+- name: Install Go Application Server Stack
+  hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    golang_state: present
+  roles:
+    - nginx
+    - golang

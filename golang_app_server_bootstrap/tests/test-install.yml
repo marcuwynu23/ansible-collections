@@ -1,0 +1,10 @@
+---
+- name: Test Go Stack Installation
+  hosts: webservers
+  become: true
+  vars:
+    nginx_state: present
+    golang_state: present
+  roles:
+  - ../roles/nginx
+  - ../roles/golang

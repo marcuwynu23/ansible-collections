@@ -1,0 +1,10 @@
+---
+- name: Test Go Stack Uninstallation
+  hosts: webservers
+  become: true
+  vars:
+    golang_state: absent
+    nginx_state: absent
+  roles:
+  - ../roles/golang
+  - ../roles/nginx

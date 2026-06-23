@@ -1,0 +1,70 @@
+---
+- name: Set desired golang state
+  set_fact:
+    golang_desired_state: "{{ golang_state | default('present') }}"
+    golang_major_version: "{{ golang_version | default('1.22') }}"
+
+- name: Install required packages
+  apt:
+    name:
+    - curl
+    - gnupg
+    - ca-certificates
+    - software-properties-common
+    state: present
+    update_cache: yes
+  become: true
+  when: golang_desired_state == "present"
+
+- name: Add Go repository (Ubuntu only)
+  ansible.builtin.apt_repository:
+    repo: "ppa:longsleep/golang-backports"
+    state: present
+  become: true
+  when:
+    - golang_desired_state == "present"
+    - ansible_distribution == "Ubuntu"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: golang_desired_state == "present"
+
+- name: Install Go (Ubuntu)
+  apt:
+    name: "golang-{{ golang_major_version }}"
+    state: present
+  become: true
+  when:
+    - golang_desired_state == "present"
+    - ansible_distribution == "Ubuntu"
+
+- name: Install Go (Debian)
+  apt:
+    name: "golang"
+    state: present
+  become: true
+  when:
+    - golang_desired_state == "present"
+    - ansible_distribution == "Debian"
+
+- name: Remove Go (Ubuntu)
+  apt:
+    name: "golang-{{ golang_major_version }}"
+    state: absent
+    purge: yes
+  become: true
+  when:
+    - golang_desired_state == "absent"
+    - ansible_distribution == "Ubuntu"
+
+- name: Remove Go (Debian)
+  apt:
+    name: "golang"
+    state: absent
+    purge: yes
+  become: true
+  when:
+    - golang_desired_state == "absent"
+    - ansible_distribution == "Debian"

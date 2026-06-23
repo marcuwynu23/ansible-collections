@@ -1,0 +1,5 @@
+---
+- name: Test golang role
+  hosts: localhost
+  roles:
+    - golang

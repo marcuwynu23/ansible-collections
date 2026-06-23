@@ -1,0 +1,13 @@
+namespace: marcuwynu23
+name: golang_app_server_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Go + Nginx stack (VPS ready for any Go application)"
+license: MIT
+tags:
+- go
+- golang
+- nginx
+- vps
