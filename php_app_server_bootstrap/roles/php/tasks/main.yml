@@ -15,7 +15,13 @@
     - apt-transport-https
     state: present
     update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_php_req
+  until: apt_php_req is not failed
   when: php_desired_state == "present"
 
 - name: Add Ondřej Surý GPG key
@@ -65,7 +71,13 @@
     - "php{{ php_major_version }}-bcmath"
     - "php{{ php_major_version }}-opcache"
     state: present
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_php_install
+  until: apt_php_install is not failed
   when: php_desired_state == "present"
 
 - name: Ensure PHP-FPM service is running
@@ -102,6 +114,7 @@
     state: absent
     purge: yes
     autoremove: yes
+    force_apt_get: yes
   become: true
   when: php_desired_state == "absent"
 
