@@ -15,7 +15,13 @@
     - software-properties-common
     state: present
     update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_dotnet_req
+  until: apt_dotnet_req is not failed
   when: dotnet_desired_state == "present"
 
 - name: Add Microsoft GPG key
@@ -57,7 +63,13 @@
     - "dotnet-sdk-{{ dotnet_major_version }}"
     - "aspnetcore-runtime-{{ dotnet_major_version }}"
     state: present
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_dotnet_install
+  until: apt_dotnet_install is not failed
   when: dotnet_desired_state == "present"
 
 - name: Remove .NET SDK and Runtime
@@ -68,6 +80,7 @@
     state: absent
     purge: yes
     autoremove: yes
+    force_apt_get: yes
   become: true
   when: dotnet_desired_state == "absent"
 
