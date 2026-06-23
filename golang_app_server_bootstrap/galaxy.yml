@@ -11,3 +11,4 @@ tags:
 - golang
 - nginx
 - vps
+repository: https://github.com/marcuwynu23/ansible-collections
