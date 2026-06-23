@@ -11,7 +11,13 @@
     - ca-certificates
     state: present
     update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_node_req
+  until: apt_node_req is not failed
   when: node_desired_state == "present"
 
 - name: Add NodeSource GPG key
@@ -40,7 +46,13 @@
   apt:
     name: nodejs
     state: present
+    install_recommends: yes
+    force_apt_get: yes
   become: true
+  retries: 5
+  delay: 10
+  register: apt_node_install
+  until: apt_node_install is not failed
   when: node_desired_state == "present"
 
 - name: Remove Node.js and NodeSource repo
@@ -48,12 +60,15 @@
     name: nodejs
     state: absent
     purge: yes
+    autoremove: yes
+    force_apt_get: yes
   become: true
   when: node_desired_state == "absent"
 
 - name: Remove NodeSource repo file when uninstalling
-  file:
-    path: /etc/apt/sources.list.d/nodesource.list
+  ansible.builtin.apt_repository:
+    repo: "deb https://deb.nodesource.com/node_18.x {{ ansible_distribution_release }} main"
     state: absent
+    filename: nodesource
   become: true
   when: node_desired_state == "absent"
