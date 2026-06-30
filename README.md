@@ -59,6 +59,22 @@ Each collection contains a playbook that calls multiple roles to install and con
   </tbody>
 </table>
 
+## CI/CD
+
+Each collection has its own GitHub Actions workflow that runs on pushes and pull requests to `main`:
+
+| Collection | Status |
+|---|---|
+| `dotnet_app_server_bootstrap` | [![dotnet_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/dotnet_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/dotnet_app_server_bootstrap.yml) |
+| `golang_app_server_bootstrap` | [![golang_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/golang_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/golang_app_server_bootstrap.yml) |
+| `node_app_server_bootstrap` | [![node_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml) |
+| `php_app_server_bootstrap` | [![php_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml) |
+| `python_app_server_bootstrap` | [![python_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/python_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/python_app_server_bootstrap.yml) |
+
+Each workflow runs two jobs:
+- **syntax-check** — Installs Ansible, builds the collection, and validates both `install.yml` and `uninstall.yml` with `--syntax-check` (runs on every push/PR).
+- **deploy** — Triggered manually via `workflow_dispatch`. Requires GitHub Secrets (`SSH_PRIVATE_KEY`, `HOST`, `ANSIBLE_USER`) to connect to a server and run the selected playbook.
+
 ## Quick Start
 
 1. Create an inventory file (`inventory.ini`) with your server IP:
