@@ -73,7 +73,7 @@ Each collection has its own GitHub Actions workflow that runs on pushes and pull
 
 Each workflow runs two jobs:
 - **syntax-check** — Installs Ansible, builds the collection, and validates both `install.yml` and `uninstall.yml` with `--syntax-check` (runs on every push/PR).
-- **deploy** — Triggered manually via `workflow_dispatch`. Requires GitHub Secrets (`SSH_PRIVATE_KEY`, `HOST`, `ANSIBLE_USER`) to connect to a server and run the selected playbook.
+- **deploy** — Triggered manually via `workflow_dispatch`. Takes `host` and `ansible_user` as inputs; the SSH private key is read from the `SSH_PRIVATE_KEY` repository secret for security.
 
 ## Quick Start
 
