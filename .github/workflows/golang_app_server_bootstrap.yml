@@ -1,0 +1,81 @@
+name: golang_app_server_bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'golang_app_server_bootstrap/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'golang_app_server_bootstrap/**'
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: Playbook to run
+        required: true
+        default: install
+        type: choice
+        options:
+          - install
+          - uninstall
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Build and install collection
+        run: |
+          cd golang_app_server_bootstrap
+          ansible-galaxy collection build
+          ansible-galaxy collection install marcuwynu23-golang_app_server_bootstrap-*.tar.gz
+
+      - name: Syntax check install playbook
+        run: ansible-playbook golang_app_server_bootstrap/playbooks/install.yml --syntax-check
+
+      - name: Syntax check uninstall playbook
+        run: ansible-playbook golang_app_server_bootstrap/playbooks/uninstall.yml --syntax-check
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Build and install collection
+        run: |
+          cd golang_app_server_bootstrap
+          ansible-galaxy collection build
+          ansible-galaxy collection install marcuwynu23-golang_app_server_bootstrap-*.tar.gz
+
+      - name: Create inventory
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          cat > inventory.ini <<EOF
+          [webservers]
+          ${{ secrets.HOST }} ansible_user=${{ secrets.ANSIBLE_USER }} ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+          [webservers:vars]
+          ansible_python_interpreter=/usr/bin/python3
+          EOF
+
+      - name: Run ${{ github.event.inputs.playbook }} playbook
+        run: |
+          ansible-playbook golang_app_server_bootstrap/playbooks/${{ github.event.inputs.playbook }}.yml \
+            -i inventory.ini
