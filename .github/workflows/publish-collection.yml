@@ -1,0 +1,47 @@
+name: Publish Collection to Ansible Galaxy
+
+on:
+  workflow_dispatch:
+    inputs:
+      collection:
+        description: Which collection to publish
+        required: true
+        type: choice
+        options:
+        - node_app_server_bootstrap
+        - dotnet_app_server_bootstrap
+        - php_app_server_bootstrap
+        - python_app_server_bootstrap
+        - golang_app_server_bootstrap
+        - docker_bootstrap
+        - podman_bootstrap
+        - kubernetes_helm_bootstrap
+        - observability_bootstrap
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install ansible
+
+    - name: Build collection
+      run: |
+        cd ${{ github.event.inputs.collection }}
+        ansible-galaxy collection build
+
+    - name: Publish to Ansible Galaxy
+      run: |
+        cd ${{ github.event.inputs.collection }}
+        ansible-galaxy collection publish marcuwynu23-${{ github.event.inputs.collection }}-*.tar.gz --api-key ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
