@@ -23,20 +23,20 @@ test_collection() {
   cd "$(dirname "$0")/../$COLLECTION" || return
   
   # Test install playbook
-  echo "  - install.yml"
-  if ansible-playbook playbooks/install.yml --syntax-check; then
-    echo "  ✓ install.yml OK"
+  echo "  - install-check.yml"
+  if ansible-playbook tests/install-check.yml --syntax-check; then
+    echo "  ✓ install-check.yml OK"
   else
-    echo "  ✗ install.yml FAILED"
+    echo "  ✗ install-check.yml FAILED"
     return 1
   fi
   
   # Test uninstall playbook
   echo "  - uninstall.yml"
-  if ansible-playbook playbooks/uninstall.yml --syntax-check; then
-    echo "  ✓ uninstall.yml OK"
+  if ansible-playbook tests/uninstall-check.yml --syntax-check; then
+    echo "  ✓ uninstall-check.yml OK"
   else
-    echo "  ✗ uninstall.yml FAILED"
+    echo "  ✗ uninstall-check.yml FAILED"
     return 1
   fi
   
