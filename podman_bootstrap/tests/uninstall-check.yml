@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    podman_state: absent
+    podman_compose_state: absent
+  roles:
+  - ../roles/podman
