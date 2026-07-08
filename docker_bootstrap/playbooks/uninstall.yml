@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    docker_state: absent
+    docker_compose_state: absent
+  roles:
+  - roles/docker

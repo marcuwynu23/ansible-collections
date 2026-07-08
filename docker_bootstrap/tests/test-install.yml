@@ -1,0 +1,9 @@
+---
+- name: Test installation
+  hosts: test_hosts
+  become: true
+  vars:
+    docker_state: present
+    docker_compose_state: present
+  roles:
+    - ../roles/docker

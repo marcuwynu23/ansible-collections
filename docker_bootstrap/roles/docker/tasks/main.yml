@@ -1,0 +1,138 @@
+---
+- name: Set desired Docker state
+  set_fact:
+    docker_desired_state: "{{ docker_state | default('present') }}"
+    docker_compose_desired_state: "{{ docker_compose_state | default('present') }}"
+
+- name: Install required packages for Docker
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg-agent
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_docker_req
+  until: apt_docker_req is not failed
+  when: docker_desired_state == "present"
+
+- name: Add Docker GPG key
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+    state: present
+  become: true
+  when: docker_desired_state == "present"
+
+- name: Add Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker
+  become: true
+  when: docker_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: docker_desired_state == "present"
+
+- name: Install Docker packages
+  apt:
+    name:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_docker_install
+  until: apt_docker_install is not failed
+  when: docker_desired_state == "present"
+
+- name: Install Docker Compose plugin
+  apt:
+    name: docker-compose-plugin
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_docker_compose_install
+  until: apt_docker_compose_install is not failed
+  when: 
+    - docker_desired_state == "present"
+    - docker_compose_desired_state == "present"
+
+- name: Ensure Docker service is running
+  service:
+    name: docker
+    state: started
+    enabled: true
+  when: docker_desired_state == "present"
+  become: true
+
+- name: Remove Docker Compose plugin
+  apt:
+    name: docker-compose-plugin
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: 
+    - docker_desired_state == "absent"
+    - docker_compose_desired_state == "absent"
+  become: true
+
+- name: Stop Docker service when removing
+  service:
+    name: docker
+    state: stopped
+    enabled: false
+  when: docker_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Docker packages
+  apt:
+    name:
+    - docker-ce
+    - docker-ce-cli
+    - containerd.io
+    - docker-buildx-plugin
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: docker_desired_state == "absent"
+  become: true
+
+- name: Remove Docker repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable"
+    state: absent
+    filename: docker
+  become: true
+  when: docker_desired_state == "absent"
+
+- name: Clean up Docker data
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+  - /var/lib/docker
+  - /etc/docker
+  become: true
+  when: docker_desired_state == "absent"

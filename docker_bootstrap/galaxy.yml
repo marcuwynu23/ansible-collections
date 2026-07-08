@@ -1,0 +1,13 @@
+namespace: marcuwynu23
+name: docker_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Docker bootstrap (installs Docker Engine)"
+license: [ "MIT" ]
+tags:
+- docker
+- container
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections
