@@ -5,7 +5,7 @@ readme: README.md
 authors:
 - Mark Wayne
 description: "Ansible collection for Node.js + Nginx + PM2 stack (VPS ready for Node backend, Next.js, Vite, or Node apps)"
-license: MIT
+license: [ "MIT" ]
 tags:
 - nodejs
 - nginx
