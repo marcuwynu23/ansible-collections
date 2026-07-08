@@ -1,0 +1,88 @@
+name: kubernetes_helm_bootstrap
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kubernetes_helm_bootstrap/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'kubernetes_helm_bootstrap/**'
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: Playbook to run
+        required: true
+        default: install
+        type: choice
+        options:
+          - install
+          - uninstall
+      host:
+        description: Target server IP/hostname
+        required: true
+      ansible_user:
+        description: SSH username
+        required: true
+        default: gcp-user
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Build and install collection
+        run: |
+          cd kubernetes_helm_bootstrap
+          ansible-galaxy collection build
+          ansible-galaxy collection install marcuwynu23-kubernetes_helm_bootstrap-*.tar.gz
+
+      - name: Syntax check install playbook
+        run: ansible-playbook kubernetes_helm_bootstrap/playbooks/install.yml --syntax-check
+
+      - name: Syntax check uninstall playbook
+        run: ansible-playbook kubernetes_helm_bootstrap/playbooks/uninstall.yml --syntax-check
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Ansible
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Build and install collection
+        run: |
+          cd kubernetes_helm_bootstrap
+          ansible-galaxy collection build
+          ansible-galaxy collection install marcuwynu23-kubernetes_helm_bootstrap-*.tar.gz
+
+      - name: Create inventory
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ github.event.inputs.host }} >> ~/.ssh/known_hosts
+          cat > inventory.ini <<EOF
+          [k8s_servers]
+          ${{ github.event.inputs.host }} ansible_user=${{ github.event.inputs.ansible_user }} ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+          [k8s_servers:vars]
+          ansible_python_interpreter=/usr/bin/python3
+          EOF
+
+      - name: Run ${{ github.event.inputs.playbook }} playbook
+        run: |
+          ansible-playbook kubernetes_helm_bootstrap/playbooks/${{ github.event.inputs.playbook }}.yml \
+            -i inventory.ini
