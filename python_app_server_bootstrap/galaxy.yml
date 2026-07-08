@@ -5,7 +5,7 @@ readme: README.md
 authors:
 - Mark Wayne
 description: "Ansible collection for Python + pip + Gunicorn + Nginx stack (VPS ready for Django, Flask, etc.)"
-license: MIT
+license: [ "MIT" ]
 tags:
 - python
 - django
