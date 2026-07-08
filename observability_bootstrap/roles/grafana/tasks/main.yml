@@ -1,0 +1,85 @@
+---
+- name: Set desired Grafana state
+  set_fact:
+    grafana_desired_state: "{{ grafana_state | default('present') }}"
+
+- name: Install required packages for Grafana
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_grafana_req
+  until: apt_grafana_req is not failed
+  when: grafana_desired_state == "present"
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+    keyring: /usr/share/keyrings/grafana.gpg
+  become: true
+  when: grafana_desired_state == "present"
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  become: true
+  when: grafana_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: grafana_desired_state == "present"
+
+- name: Install Grafana
+  apt:
+    name: grafana
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_grafana_install
+  until: apt_grafana_install is not failed
+  when: grafana_desired_state == "present"
+
+- name: Ensure Grafana service is running
+  service:
+    name: grafana-server
+    state: started
+    enabled: true
+  when: grafana_desired_state == "present"
+  become: true
+
+- name: Stop Grafana service when removing
+  service:
+    name: grafana-server
+    state: stopped
+    enabled: false
+  when: grafana_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Grafana
+  apt:
+    name: grafana
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: grafana_desired_state == "absent"
+  become: true

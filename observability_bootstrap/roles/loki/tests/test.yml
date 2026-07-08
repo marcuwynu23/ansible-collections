@@ -1,0 +1,8 @@
+---
+- name: Test Loki role
+  hosts: test_hosts
+  become: true
+  vars:
+    loki_state: present
+  roles:
+    - ../

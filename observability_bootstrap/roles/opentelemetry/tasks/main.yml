@@ -1,0 +1,100 @@
+---
+- name: Set desired OpenTelemetry state
+  set_fact:
+    opentelemetry_desired_state: "{{ opentelemetry_state | default('present') }}"
+
+- name: Install required packages for OpenTelemetry
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_opentelemetry_req
+  until: apt_opentelemetry_req is not failed
+  when: opentelemetry_desired_state == "present"
+
+- name: Add OpenTelemetry GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.releases.otelcol-contrib.io/gpg
+    state: present
+    keyring: /usr/share/keyrings/otelcol-contrib-archive-keyring.gpg
+  become: true
+  when: opentelemetry_desired_state == "present"
+
+- name: Add OpenTelemetry repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/otelcol-contrib-archive-keyring.gpg] https://apt.releases.otelcol-contrib.io stable main"
+    state: present
+    filename: otelcol-contrib
+  become: true
+  when: opentelemetry_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: opentelemetry_desired_state == "present"
+
+- name: Install OpenTelemetry Collector
+  apt:
+    name: otelcol-contrib
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_opentelemetry_install
+  until: apt_opentelemetry_install is not failed
+  when: opentelemetry_desired_state == "present"
+
+- name: Ensure OpenTelemetry Collector service is running
+  service:
+    name: otelcol-contrib
+    state: started
+    enabled: true
+  when: opentelemetry_desired_state == "present"
+  become: true
+
+- name: Stop OpenTelemetry Collector service when removing
+  service:
+    name: otelcol-contrib
+    state: stopped
+    enabled: false
+  when: opentelemetry_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove OpenTelemetry Collector
+  apt:
+    name: otelcol-contrib
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: opentelemetry_desired_state == "absent"
+  become: true
+
+- name: Remove OpenTelemetry repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/otelcol-contrib-archive-keyring.gpg] https://apt.releases.otelcol-contrib.io stable main"
+    state: absent
+    filename: otelcol-contrib
+  become: true
+  when: opentelemetry_desired_state == "absent"
+
+- name: Remove OpenTelemetry GPG key
+  file:
+    path: /usr/share/keyrings/otelcol-contrib-archive-keyring.gpg
+    state: absent
+  become: true
+  when: opentelemetry_desired_state == "absent"

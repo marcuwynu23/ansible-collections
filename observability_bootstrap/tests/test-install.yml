@@ -1,0 +1,20 @@
+---
+- name: Test installation
+  hosts: test_hosts
+  become: true
+  vars:
+    nginx_state: present
+    prometheus_state: present
+    grafana_state: present
+    loki_state: present
+    promtail_state: present
+    tempo_state: present
+    opentelemetry_state: present
+  roles:
+  - ../roles/nginx
+  - ../roles/prometheus
+  - ../roles/grafana
+  - ../roles/loki
+  - ../roles/promtail
+  - ../roles/tempo
+  - ../roles/opentelemetry

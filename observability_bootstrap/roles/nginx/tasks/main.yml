@@ -1,0 +1,126 @@
+---
+- name: Set desired Nginx state
+  set_fact:
+    nginx_desired_state: "{{ nginx_state | default('present') }}"
+    observability_api_servers: "{{ observability_api_servers | default([]) }}"
+
+- name: Install required packages for Nginx
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_nginx_req
+  until: apt_nginx_req is not failed
+  when: nginx_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: nginx_desired_state == "present"
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_nginx_install
+  until: apt_nginx_install is not failed
+  when: nginx_desired_state == "present"
+
+- name: Ensure Nginx service is running
+  service:
+    name: nginx
+    state: started
+    enabled: true
+  when: nginx_desired_state == "present"
+  become: true
+
+- name: Create Nginx configuration for each API server
+  ansible.builtin.template:
+    src: observability_api_server.conf.j2
+    dest: "/etc/nginx/sites-available/{{ item.server_name }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ observability_api_servers }}"
+  become: true
+  when: nginx_desired_state == "present"
+
+- name: Enable API server configurations
+  ansible.builtin.file:
+    src: "/etc/nginx/sites-available/{{ item.server_name }}"
+    dest: "/etc/nginx/sites-enabled/{{ item.server_name }}"
+    state: link
+  loop: "{{ observability_api_servers }}"
+  become: true
+  when: nginx_desired_state == "present"
+
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: true
+  when: nginx_desired_state == "present"
+
+- name: Test Nginx configuration
+  ansible.builtin.command: nginx -t
+  become: true
+  when: nginx_desired_state == "present"
+  changed_when: false
+
+- name: Restart Nginx to apply changes
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+  become: true
+  when: nginx_desired_state == "present"
+
+- name: Stop Nginx service when removing
+  service:
+    name: nginx
+    state: stopped
+    enabled: false
+  when: nginx_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove API server configurations when uninstalling
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-available/{{ item.server_name }}"
+    state: absent
+  loop: "{{ observability_api_servers }}"
+  become: true
+  when: nginx_desired_state == "absent"
+
+- name: Remove API server enabled links when uninstalling
+  ansible.builtin.file:
+    path: "/etc/nginx/sites-enabled/{{ item.server_name }}"
+    state: absent
+  loop: "{{ observability_api_servers }}"
+  become: true
+  when: nginx_desired_state == "absent"
+
+- name: Remove Nginx
+  apt:
+    name: nginx
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: nginx_desired_state == "absent"
+  become: true

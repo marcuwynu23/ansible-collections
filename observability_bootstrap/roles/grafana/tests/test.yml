@@ -1,0 +1,8 @@
+---
+- name: Test Grafana role
+  hosts: test_hosts
+  become: true
+  vars:
+    grafana_state: present
+  roles:
+    - ../

@@ -1,0 +1,79 @@
+---
+- name: Set desired Tempo state
+  set_fact:
+    tempo_desired_state: "{{ tempo_state | default('present') }}"
+    tempo_version: "{{ tempo_version | default('2.5.0') }}"
+
+- name: Install required packages for Tempo
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_tempo_req
+  until: apt_tempo_req is not failed
+  when: tempo_desired_state == "present"
+
+- name: Download Tempo deb package
+  ansible.builtin.get_url:
+    url: "https://github.com/grafana/tempo/releases/download/v{{ tempo_version }}/tempo_{{ tempo_version }}_linux_amd64.deb"
+    dest: "/tmp/tempo_{{ tempo_version }}_linux_amd64.deb"
+    mode: '0644'
+  become: true
+  retries: 5
+  delay: 10
+  when: tempo_desired_state == "present"
+
+- name: Install Tempo deb package
+  ansible.builtin.apt:
+    deb: "/tmp/tempo_{{ tempo_version }}_linux_amd64.deb"
+    state: present
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_tempo_install
+  until: apt_tempo_install is not failed
+  when: tempo_desired_state == "present"
+
+- name: Clean up Tempo deb package
+  ansible.builtin.file:
+    path: "/tmp/tempo_{{ tempo_version }}_linux_amd64.deb"
+    state: absent
+  become: true
+  when: tempo_desired_state == "present"
+
+- name: Ensure Tempo service is running
+  service:
+    name: tempo
+    state: started
+    enabled: true
+  when: tempo_desired_state == "present"
+  become: true
+
+- name: Stop Tempo service when removing
+  service:
+    name: tempo
+    state: stopped
+    enabled: false
+  when: tempo_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Tempo
+  apt:
+    name: tempo
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: tempo_desired_state == "absent"
+  become: true

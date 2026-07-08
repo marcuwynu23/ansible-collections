@@ -1,0 +1,69 @@
+---
+- name: Set desired Prometheus state
+  set_fact:
+    prometheus_desired_state: "{{ prometheus_state | default('present') }}"
+
+- name: Install required packages for Prometheus
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_prometheus_req
+  until: apt_prometheus_req is not failed
+  when: prometheus_desired_state == "present"
+
+- name: Update apt cache for Prometheus
+  apt:
+    update_cache: yes
+  become: true
+  when: prometheus_desired_state == "present"
+
+- name: Install Prometheus
+  apt:
+    name: prometheus
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_prometheus_install
+  until: apt_prometheus_install is not failed
+  when: prometheus_desired_state == "present"
+
+- name: Ensure Prometheus service is running
+  service:
+    name: prometheus
+    state: started
+    enabled: true
+  when: prometheus_desired_state == "present"
+  become: true
+
+- name: Stop Prometheus service when removing
+  service:
+    name: prometheus
+    state: stopped
+    enabled: false
+  when: prometheus_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Prometheus
+  apt:
+    name: prometheus
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: prometheus_desired_state == "absent"
+  become: true

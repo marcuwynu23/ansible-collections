@@ -1,0 +1,8 @@
+---
+- name: Test Tempo role
+  hosts: test_hosts
+  become: true
+  vars:
+    tempo_state: present
+  roles:
+    - ../

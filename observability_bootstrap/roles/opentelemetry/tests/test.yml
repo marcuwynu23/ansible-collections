@@ -1,0 +1,8 @@
+---
+- name: Test OpenTelemetry role
+  hosts: test_hosts
+  become: true
+  vars:
+    opentelemetry_state: present
+  roles:
+    - ../

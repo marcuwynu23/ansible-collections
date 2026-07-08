@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    opentelemetry_state: absent
+    tempo_state: absent
+    promtail_state: absent
+    loki_state: absent
+    grafana_state: absent
+    prometheus_state: absent
+    nginx_state: absent
+  roles:
+  - roles/opentelemetry
+  - roles/tempo
+  - roles/promtail
+  - roles/loki
+  - roles/grafana
+  - roles/prometheus
+  - roles/nginx

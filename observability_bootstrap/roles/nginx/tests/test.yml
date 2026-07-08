@@ -1,0 +1,8 @@
+---
+- name: Test Nginx role
+  hosts: test_hosts
+  become: true
+  vars:
+    nginx_state: present
+  roles:
+    - ../

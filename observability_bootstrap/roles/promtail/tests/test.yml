@@ -1,0 +1,8 @@
+---
+- name: Test Promtail role
+  hosts: test_hosts
+  become: true
+  vars:
+    promtail_state: present
+  roles:
+    - ../

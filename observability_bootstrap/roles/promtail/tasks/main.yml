@@ -1,0 +1,85 @@
+---
+- name: Set desired Promtail state
+  set_fact:
+    promtail_desired_state: "{{ promtail_state | default('present') }}"
+
+- name: Install required packages for Promtail
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_promtail_req
+  until: apt_promtail_req is not failed
+  when: promtail_desired_state == "present"
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+    keyring: /usr/share/keyrings/grafana.gpg
+  become: true
+  when: promtail_desired_state == "present"
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  become: true
+  when: promtail_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: promtail_desired_state == "present"
+
+- name: Install Promtail
+  apt:
+    name: promtail
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_promtail_install
+  until: apt_promtail_install is not failed
+  when: promtail_desired_state == "present"
+
+- name: Ensure Promtail service is running
+  service:
+    name: promtail
+    state: started
+    enabled: true
+  when: promtail_desired_state == "present"
+  become: true
+
+- name: Stop Promtail service when removing
+  service:
+    name: promtail
+    state: stopped
+    enabled: false
+  when: promtail_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Promtail
+  apt:
+    name: promtail
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: promtail_desired_state == "absent"
+  become: true

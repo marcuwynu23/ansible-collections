@@ -1,0 +1,85 @@
+---
+- name: Set desired Loki state
+  set_fact:
+    loki_desired_state: "{{ loki_state | default('present') }}"
+
+- name: Install required packages for Loki
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_loki_req
+  until: apt_loki_req is not failed
+  when: loki_desired_state == "present"
+
+- name: Add Grafana GPG key
+  ansible.builtin.apt_key:
+    url: https://apt.grafana.com/gpg.key
+    state: present
+    keyring: /usr/share/keyrings/grafana.gpg
+  become: true
+  when: loki_desired_state == "present"
+
+- name: Add Grafana repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/grafana.gpg] https://apt.grafana.com stable main"
+    state: present
+    filename: grafana
+  become: true
+  when: loki_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: loki_desired_state == "present"
+
+- name: Install Loki
+  apt:
+    name: loki
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_loki_install
+  until: apt_loki_install is not failed
+  when: loki_desired_state == "present"
+
+- name: Ensure Loki service is running
+  service:
+    name: loki
+    state: started
+    enabled: true
+  when: loki_desired_state == "present"
+  become: true
+
+- name: Stop Loki service when removing
+  service:
+    name: loki
+    state: stopped
+    enabled: false
+  when: loki_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Loki
+  apt:
+    name: loki
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: loki_desired_state == "absent"
+  become: true

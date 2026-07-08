@@ -1,0 +1,18 @@
+namespace: marcuwynu23
+name: observability_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for observability stack (Prometheus, Grafana, Loki, Promtail, Tempo, OpenTelemetry)"
+license: [ "MIT" ]
+tags:
+- observability
+- monitoring
+- prometheus
+- grafana
+- loki
+- tempo
+- opentelemetry
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections
