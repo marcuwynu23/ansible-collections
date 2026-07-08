@@ -2,13 +2,13 @@ name: observability_bootstrap
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - 'observability_bootstrap/**'
+    - 'observability_bootstrap/**'
   pull_request:
-    branches: [main]
+    branches: [ main ]
     paths:
-      - 'observability_bootstrap/**'
+    - 'observability_bootstrap/**'
   workflow_dispatch:
     inputs:
       playbook:
@@ -17,8 +17,8 @@ on:
         default: install
         type: choice
         options:
-          - install
-          - uninstall
+        - install
+        - uninstall
       host:
         description: Target server IP/hostname
         required: true
@@ -31,58 +31,63 @@ jobs:
   syntax-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Install Ansible
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install ansible
 
-      - name: Build and install collection
-        run: |
-          cd observability_bootstrap
-          ansible-galaxy collection build
-          ansible-galaxy collection install marcuwynu23-observability_bootstrap-*.tar.gz
+    - name: Build and install collection
+      run: |
+        cd observability_bootstrap
+        ansible-galaxy collection build
+        ansible-galaxy collection install marcuwynu23-observability_bootstrap-*.tar.gz
 
-      - name: Syntax check install playbook
-        run: ansible-playbook observability_bootstrap/playbooks/install.yml --syntax-check
+    - name: Syntax check install playbook
+      run: |
+        cd observability_bootstrap
+        ansible-playbook playbooks/install.yml --syntax-check
 
-      - name: Syntax check uninstall playbook
-        run: ansible-playbook observability_bootstrap/playbooks/uninstall.yml --syntax-check
+    - name: Syntax check uninstall playbook
+      run: |
+        cd observability_bootstrap
+        ansible-playbook playbooks/uninstall.yml --syntax-check
 
   deploy:
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Install Ansible
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install ansible
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install ansible
 
-      - name: Build and install collection
+    - name: Build and install collection
+      run: |
+        cd observability_bootstrap
+        ansible-galaxy collection build
+        ansible-galaxy collection install marcuwynu23-observability_bootstrap-*.tar.gz
+
+    - name: Create inventory
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ github.event.inputs.host }} >> ~/.ssh/known_hosts
+        cat > inventory.ini <<EOF
+        [observability_servers]
+        ${{ github.event.inputs.host }} ansible_user=${{ github.event.inputs.ansible_user }} ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+        [observability_servers:vars]
+        ansible_python_interpreter=/usr/bin/python3
+        EOF
+
+    - name: Run ${{ github.event.inputs.playbook }} playbook
         run: |
           cd observability_bootstrap
-          ansible-galaxy collection build
-          ansible-galaxy collection install marcuwynu23-observability_bootstrap-*.tar.gz
-
-      - name: Create inventory
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ github.event.inputs.host }} >> ~/.ssh/known_hosts
-          cat > inventory.ini <<EOF
-          [observability_servers]
-          ${{ github.event.inputs.host }} ansible_user=${{ github.event.inputs.ansible_user }} ansible_ssh_private_key_file=~/.ssh/id_rsa
-
-          [observability_servers:vars]
-          ansible_python_interpreter=/usr/bin/python3
-          EOF
-
-      - name: Run ${{ github.event.inputs.playbook }} playbook
-        run: |
-          ansible-playbook observability_bootstrap/playbooks/${{ github.event.inputs.playbook }}.yml \
-            -i inventory.ini
+          ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
+            -i ../inventory.ini
