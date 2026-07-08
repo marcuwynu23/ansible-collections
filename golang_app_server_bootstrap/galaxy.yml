@@ -5,7 +5,7 @@ readme: README.md
 authors:
 - Mark Wayne
 description: "Ansible collection for Go + Nginx stack (VPS ready for any Go application)"
-license: MIT
+license: [ "MIT" ]
 tags:
 - go
 - golang
