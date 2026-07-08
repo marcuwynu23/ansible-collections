@@ -87,7 +87,7 @@ jobs:
         EOF
 
     - name: Run ${{ github.event.inputs.playbook }} playbook
-        run: |
-          cd observability_bootstrap
-          ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
-            -i ../inventory.ini
+      run: |
+        cd observability_bootstrap
+        ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
+          -i ../inventory.ini

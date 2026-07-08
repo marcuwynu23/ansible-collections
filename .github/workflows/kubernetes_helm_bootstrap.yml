@@ -87,7 +87,7 @@ jobs:
         EOF
 
     - name: Run ${{ github.event.inputs.playbook }} playbook
-        run: |
-          cd kubernetes_helm_bootstrap
-          ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
-            -i ../inventory.ini
+      run: |
+        cd kubernetes_helm_bootstrap
+        ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
+          -i ../inventory.ini
