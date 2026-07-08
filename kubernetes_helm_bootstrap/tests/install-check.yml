@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    kubectl_state: present
+    helm_state: present
+  roles:
+  - roles/kubectl
+  - roles/helm
