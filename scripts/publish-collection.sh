@@ -21,6 +21,11 @@ COLLECTION_NAME=$1
 # Get the directory of the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Load secrets file if it exists
+if [ -f "$SCRIPT_DIR/../.secrets" ]; then
+  export $(cat "$SCRIPT_DIR/../.secrets" | grep -v '^#' | xargs)
+fi
+
 # Check if collection directory exists (one level up)
 if [ ! -d "$SCRIPT_DIR/../$COLLECTION_NAME" ]; then
   echo "Error: Collection directory '$COLLECTION_NAME' not found!"
@@ -44,6 +49,10 @@ fi
 
 # Publish to Ansible Galaxy
 echo "Publishing $TARBALL to Ansible Galaxy..."
-ansible-galaxy collection publish "$TARBALL"
+if [ -z "$ANSIBLE_GALAXY_API_KEY" ]; then
+  ansible-galaxy collection publish "$TARBALL"
+else
+  ansible-galaxy collection publish "$TARBALL" --api-key "$ANSIBLE_GALAXY_API_KEY"
+fi
 
 echo "Done!"
