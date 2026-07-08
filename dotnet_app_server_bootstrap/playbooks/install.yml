@@ -6,5 +6,5 @@
     nginx_state: present
     dotnet_state: present
   roles:
-    - nginx
-    - dotnet
+    - roles/nginx
+    - roles/dotnet

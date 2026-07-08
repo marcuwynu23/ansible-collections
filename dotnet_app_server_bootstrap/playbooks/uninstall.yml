@@ -6,5 +6,5 @@
     dotnet_state: absent
     nginx_state: absent
   roles:
-    - dotnet
-    - nginx
+    - roles/dotnet
+    - roles/nginx
