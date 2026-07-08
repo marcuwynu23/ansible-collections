@@ -1,0 +1,14 @@
+namespace: marcuwynu23
+name: kubernetes_helm_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Kubernetes and Helm bootstrap (installs kubectl and Helm)"
+license: [ "MIT" ]
+tags:
+- kubernetes
+- helm
+- kubectl
+- vps
+repository: https://github.com/marcuwynu23/ansible-collections

@@ -1,0 +1,8 @@
+---
+- name: Test kubectl role
+  hosts: test_hosts
+  become: true
+  vars:
+    kubectl_state: present
+  roles:
+    - ../

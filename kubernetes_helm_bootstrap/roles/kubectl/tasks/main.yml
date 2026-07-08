@@ -1,0 +1,82 @@
+---
+- name: Set desired kubectl state
+  set_fact:
+    kubectl_desired_state: "{{ kubectl_state | default('present') }}"
+
+- name: Install required packages for kubectl
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_kubectl_req
+  until: apt_kubectl_req is not failed
+  when: kubectl_desired_state == "present"
+
+- name: Add Kubernetes GPG key
+  ansible.builtin.apt_key:
+    url: https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key
+    state: present
+    keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  become: true
+  when: kubectl_desired_state == "present"
+
+- name: Add Kubernetes repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /"
+    state: present
+    filename: kubernetes
+  become: true
+  when: kubectl_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: kubectl_desired_state == "present"
+
+- name: Install kubectl
+  apt:
+    name: kubectl
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_kubectl_install
+  until: apt_kubectl_install is not failed
+  when: kubectl_desired_state == "present"
+
+- name: Remove kubectl
+  apt:
+    name: kubectl
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: kubectl_desired_state == "absent"
+  become: true
+
+- name: Remove Kubernetes repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /"
+    state: absent
+    filename: kubernetes
+  become: true
+  when: kubectl_desired_state == "absent"
+
+- name: Remove Kubernetes GPG key
+  file:
+    path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    state: absent
+  become: true
+  when: kubectl_desired_state == "absent"

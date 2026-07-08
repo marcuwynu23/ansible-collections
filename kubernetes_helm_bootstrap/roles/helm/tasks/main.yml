@@ -1,0 +1,82 @@
+---
+- name: Set desired Helm state
+  set_fact:
+    helm_desired_state: "{{ helm_state | default('present') }}"
+
+- name: Install required packages for Helm
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_helm_req
+  until: apt_helm_req is not failed
+  when: helm_desired_state == "present"
+
+- name: Add Helm GPG key
+  ansible.builtin.apt_key:
+    url: https://baltocdn.com/helm/signing.asc
+    state: present
+    keyring: /etc/apt/keyrings/helm.gpg
+  become: true
+  when: helm_desired_state == "present"
+
+- name: Add Helm repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+    state: present
+    filename: helm
+  become: true
+  when: helm_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: helm_desired_state == "present"
+
+- name: Install Helm
+  apt:
+    name: helm
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_helm_install
+  until: apt_helm_install is not failed
+  when: helm_desired_state == "present"
+
+- name: Remove Helm
+  apt:
+    name: helm
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: helm_desired_state == "absent"
+  become: true
+
+- name: Remove Helm repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main"
+    state: absent
+    filename: helm
+  become: true
+  when: helm_desired_state == "absent"
+
+- name: Remove Helm GPG key
+  file:
+    path: /etc/apt/keyrings/helm.gpg
+    state: absent
+  become: true
+  when: helm_desired_state == "absent"

@@ -1,0 +1,10 @@
+---
+- name: Test uninstallation
+  hosts: test_hosts
+  become: true
+  vars:
+    helm_state: absent
+    kubectl_state: absent
+  roles:
+    - ../roles/helm
+    - ../roles/kubectl
