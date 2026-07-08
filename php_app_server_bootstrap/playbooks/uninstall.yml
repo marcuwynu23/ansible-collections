@@ -6,5 +6,5 @@
     php_state: absent
     nginx_state: absent
   roles:
-    - php
-    - nginx
+    - roles/php
+    - roles/nginx

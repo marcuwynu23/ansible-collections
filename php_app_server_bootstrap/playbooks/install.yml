@@ -6,5 +6,5 @@
     nginx_state: present
     php_state: present
   roles:
-    - nginx
-    - php
+    - roles/nginx
+    - roles/php
