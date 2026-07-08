@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    php_state: absent
+    nginx_state: absent
+  roles:
+  - ../roles/php
+  - ../roles/nginx
