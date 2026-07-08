@@ -6,5 +6,5 @@
     nginx_state: present
     golang_state: present
   roles:
-    - nginx
-    - golang
+    - roles/nginx
+    - roles/golang
