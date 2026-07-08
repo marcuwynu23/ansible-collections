@@ -2,3 +2,6 @@ inventory.ini
 !inventory.ini.example
 !inventory.ini.test
 *.tar.gz
+
+.secrets*
+!.secrets.example
