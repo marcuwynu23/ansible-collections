@@ -47,12 +47,12 @@ jobs:
     - name: Syntax check install playbook
       run: |
         cd docker_bootstrap
-        ansible-playbook playbooks/install.yml --syntax-check
+        ansible-playbook tests/install-check.yml --syntax-check
 
     - name: Syntax check uninstall playbook
       run: |
         cd docker_bootstrap
-        ansible-playbook playbooks/uninstall.yml --syntax-check
+        ansible-playbook tests/uninstall-check.yml --syntax-check
 
   deploy:
     if: github.event_name == 'workflow_dispatch'
