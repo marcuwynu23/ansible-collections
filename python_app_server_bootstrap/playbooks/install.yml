@@ -7,6 +7,6 @@
     python_state: present
     gunicorn_state: present
   roles:
-    - nginx
-    - python
-    - gunicorn
+    - roles/nginx
+    - roles/python
+    - roles/gunicorn
