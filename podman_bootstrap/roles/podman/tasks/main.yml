@@ -1,0 +1,113 @@
+---
+- name: Set desired Podman state
+  set_fact:
+    podman_desired_state: "{{ podman_state | default('present') }}"
+    podman_compose_desired_state: "{{ podman_compose_state | default('present') }}"
+
+- name: Install required packages for Podman
+  apt:
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gnupg
+    - software-properties-common
+    state: present
+    update_cache: yes
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_podman_req
+  until: apt_podman_req is not failed
+  when: podman_desired_state == "present"
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  become: true
+  when: podman_desired_state == "present"
+
+- name: Install Podman packages
+  apt:
+    name:
+    - podman
+    - podman-docker
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_podman_install
+  until: apt_podman_install is not failed
+  when: podman_desired_state == "present"
+
+- name: Install Podman Compose
+  apt:
+    name: podman-compose
+    state: present
+    install_recommends: yes
+    force_apt_get: yes
+  become: true
+  retries: 5
+  delay: 10
+  register: apt_podman_compose_install
+  until: apt_podman_compose_install is not failed
+  when: 
+    - podman_desired_state == "present"
+    - podman_compose_desired_state == "present"
+
+- name: Ensure Podman service is running
+  service:
+    name: podman
+    state: started
+    enabled: true
+  when: podman_desired_state == "present"
+  become: true
+
+- name: Remove Podman Compose
+  apt:
+    name: podman-compose
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: 
+    - podman_desired_state == "absent"
+    - podman_compose_desired_state == "absent"
+  become: true
+
+- name: Stop Podman service when removing
+  service:
+    name: podman
+    state: stopped
+    enabled: false
+  when: podman_desired_state == "absent"
+  ignore_errors: true
+  become: true
+
+- name: Remove Podman packages
+  apt:
+    name:
+    - podman
+    - podman-docker
+    state: absent
+    purge: yes
+    autoremove: yes
+    force_apt_get: yes
+  when: podman_desired_state == "absent"
+  become: true
+
+- name: Clean up Podman data
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+  - /var/lib/containers
+  - /etc/containers
+  - /root/.local/share/containers
+  - "/home/{{ ansible_user_id }}/.local/share/containers"
+  become: true
+  when: podman_desired_state == "absent"

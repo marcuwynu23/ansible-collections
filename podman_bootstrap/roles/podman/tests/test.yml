@@ -1,0 +1,9 @@
+---
+- name: Test Podman role
+  hosts: test_hosts
+  become: true
+  vars:
+    podman_state: present
+    podman_compose_state: present
+  roles:
+    - ../

@@ -1,0 +1,9 @@
+---
+- name: Test uninstallation
+  hosts: test_hosts
+  become: true
+  vars:
+    podman_state: absent
+    podman_compose_state: absent
+  roles:
+    - ../roles/podman
