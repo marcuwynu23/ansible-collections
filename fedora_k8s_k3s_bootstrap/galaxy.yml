@@ -1,0 +1,16 @@
+namespace: marcuwynu23
+name: fedora_k8s_k3s_bootstrap
+version: 1.0.0
+readme: README.md
+authors:
+- Mark Wayne
+description: "Ansible collection for Setup K8s k3s in Fedora Virtual Machine"
+license: [ "MIT" ]
+tags:
+- linux
+- fedora
+- kubernetes
+- k3s
+- k8s
+- vm
+repository: https://github.com/marcuwynu23/ansible-collections
