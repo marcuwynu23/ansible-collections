@@ -60,6 +60,10 @@ Each collection contains a playbook that calls multiple roles to install and con
     <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>podman_bootstrap</code></td><td style="padding:6px 12px;">Podman + Podman Compose</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/podman_bootstrap">galaxy</a></td></tr>
     <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>kubernetes_helm_bootstrap</code></td><td style="padding:6px 12px;">kubectl + Helm</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/kubernetes_helm_bootstrap">galaxy</a></td></tr>
     <tr><td style="padding:6px 12px;"><code>observability_bootstrap</code></td><td style="padding:6px 12px;">Prometheus + Grafana + Loki + Promtail + Tempo + OpenTelemetry + Nginx</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/observability_bootstrap">galaxy</a></td></tr>
+    <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>fedora_k8s_k3s_bootstrap</code></td><td style="padding:6px 12px;">K3s cluster on Fedora (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/fedora_k8s_k3s_bootstrap">galaxy</a></td></tr>
+    <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>fedora_k8s_rke2_bootstrap</code></td><td style="padding:6px 12px;">RKE2 cluster on Fedora (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/fedora_k8s_rke2_bootstrap">galaxy</a></td></tr>
+    <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>ubuntu_k8s_rke2_bootstrap</code></td><td style="padding:6px 12px;">RKE2 cluster on Ubuntu (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/ubuntu_k8s_rke2_bootstrap">galaxy</a></td></tr>
+
   </tbody>
 </table>
 
@@ -67,21 +71,25 @@ Each collection contains a playbook that calls multiple roles to install and con
 
 Each collection has its own GitHub Actions workflow that runs on pushes and pull requests to `main`:
 
-| Collection | Status |
-|---|---|
+| Collection                    | Status                                                                                                                                                                                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `dotnet_app_server_bootstrap` | [![dotnet_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/dotnet_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/dotnet_app_server_bootstrap.yml) |
 | `golang_app_server_bootstrap` | [![golang_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/golang_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/golang_app_server_bootstrap.yml) |
-| `node_app_server_bootstrap` | [![node_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml) |
-| `php_app_server_bootstrap` | [![php_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml) |
+| `node_app_server_bootstrap`   | [![node_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/node_app_server_bootstrap.yml)       |
+| `php_app_server_bootstrap`    | [![php_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/php_app_server_bootstrap.yml)          |
 | `python_app_server_bootstrap` | [![python_app_server_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/python_app_server_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/python_app_server_bootstrap.yml) |
-| `docker_bootstrap` | [![docker_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/docker_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/docker_bootstrap.yml) |
-| `podman_bootstrap` | [![podman_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/podman_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/podman_bootstrap.yml) |
-| `kubernetes_helm_bootstrap` | [![kubernetes_helm_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/kubernetes_helm_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/kubernetes_helm_bootstrap.yml) |
-| `observability_bootstrap` | [![observability_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/observability_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/observability_bootstrap.yml) |
+| `docker_bootstrap`            | [![docker_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/docker_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/docker_bootstrap.yml)                                  |
+| `podman_bootstrap`            | [![podman_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/podman_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/podman_bootstrap.yml)                                  |
+| `kubernetes_helm_bootstrap`   | [![kubernetes_helm_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/kubernetes_helm_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/kubernetes_helm_bootstrap.yml)       |
+| `observability_bootstrap`     | [![observability_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/observability_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/observability_bootstrap.yml)             |
+| `fedora_k8s_k3s_bootstrap`    | [![fedora_k8s_k3s_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_k3s_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_k3s_bootstrap.yml)          |
+| `fedora_k8s_rke2_bootstrap`   | [![fedora_k8s_rke2_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_rke2_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_rke2_bootstrap.yml)       |
+| `ubuntu_k8s_rke2_bootstrap`   | [![ubuntu_k8s_rke2_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_rke2_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_rke2_bootstrap.yml)       |
 
 Each workflow runs two jobs:
-- **syntax-check** — Installs Ansible, builds the collection, and validates both `install.yml` and `uninstall.yml` with `--syntax-check` (runs on every push/PR).
-- **deploy** — Triggered manually via `workflow_dispatch`. Takes `host` and `ansible_user` as inputs; the SSH private key is read from the `SSH_PRIVATE_KEY` repository secret for security.
+
+- **syntax-check** — Installs Ansible, builds the collection, and validates every playbook with `--syntax-check` (e.g. `install.yml` / `uninstall.yml`, or the k8s collections' `install-master` / `install-worker` / `uninstall-master` / `uninstall-worker`) (runs on every push/PR).
+- **deploy** — Triggered manually via `workflow_dispatch`. Takes the playbook, `host` and `ansible_user` as inputs (k8s collections also accept the join URL and node-token); the SSH private key is read from the `SSH_PRIVATE_KEY` repository secret for security.
 
 ## Quick Start
 
