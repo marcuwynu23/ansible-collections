@@ -1,0 +1,35 @@
+---
+# Joins RKE2 workers on the [worker] group to an existing server.
+# Requires rke2_server_url + rke2_token (override with -e), see vars below.
+# Usage:
+#   ansible-playbook -i inventory.ini playbooks/install-worker.yml \
+#     -e rke2_server_url=https://192.168.1.100:9345 -e rke2_token=<node-token>
+- name: Install RKE2 worker (agent) node on Ubuntu
+  hosts: worker
+  become: true
+  vars:
+    # Standalone containerd is not needed: RKE2 ships its own embedded
+    # containerd. Set to true only if you also want system containerd.
+    containerd_enabled: false
+    containerd_state: present
+    rke2_type: agent
+    rke2_state: present
+    rke2_version: ""
+    # Required: point at an existing RKE2 server and use its node-token.
+    # Retrieve it on the master with:
+    #   sudo cat /var/lib/rancher/rke2/server/node-token
+    rke2_server_url: "https://192.168.1.100:9345"
+    rke2_token: "<paste-master-node-token>"
+    rke2_config_extra: {}
+  roles:
+    - roles/pre
+    - roles/containerd
+    - roles/rke2
+  pre_tasks:
+    - name: Require RKE2 join variables for workers
+      assert:
+        that:
+          - rke2_server_url | length > 0
+          - rke2_token | length > 0
+          - rke2_token != "<paste-master-node-token>"
+        fail_msg: "Set rke2_server_url and rke2_token (from the master's node-token) to join workers."

@@ -1,0 +1,30 @@
+---
+# Installs the RKE2 control-plane on the [master] group (first or additional server).
+# Usage:
+#   cp playbooks/inventory.ini.example inventory.ini  # adjust hosts/key
+#   ansible-playbook -i inventory.ini playbooks/install-master.yml
+- name: Install RKE2 master (control-plane) node on Ubuntu
+  hosts: master
+  become: true
+  vars:
+    # Standalone containerd is not needed: RKE2 ships its own embedded
+    # containerd. Set to true only if you also want system containerd.
+    containerd_enabled: false
+    containerd_state: present
+    rke2_type: server
+    rke2_state: present
+    # Pin a version like "v1.30.2+rke2r1" or leave empty for latest stable.
+    rke2_version: ""
+    # First server leaves these empty; additional servers joining a
+    # cluster must set both:
+    # rke2_server_url: "https://192.168.1.100:9345"
+    # rke2_token: "<paste-master-node-token>"
+    rke2_server_url: ""
+    rke2_token: ""
+    rke2_config_extra: {}
+  roles:
+    - roles/pre
+    - roles/containerd
+    - roles/rke2
+  # After install, get the worker join token with:
+  #   sudo cat /var/lib/rancher/rke2/server/node-token

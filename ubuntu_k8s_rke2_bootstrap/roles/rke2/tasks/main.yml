@@ -1,0 +1,189 @@
+---
+# tasks file for rke2 (Ubuntu).
+# Installs RKE2 server (control-plane) or agent (worker) via get.rke2.io,
+# writes /etc/rancher/rke2/config.yaml and enables the systemd service.
+
+- name: Set RKE2 facts
+  set_fact:
+    rke2_desired_state: "{{ rke2_state | default('present') }}"
+    rke2_node_type: "{{ rke2_type | default('server') | lower }}"
+    rke2_service_name: "{{ 'rke2-server' if (rke2_type | default('server') | lower) == 'server' else 'rke2-agent' }}"
+
+- name: Validate rke2_type
+  assert:
+    that:
+      - rke2_node_type in ["server", "agent"]
+    fail_msg: "rke2_type must be 'server' or 'agent' (got '{{ rke2_type }}')."
+
+- name: Validate agent join variables
+  assert:
+    that:
+      - rke2_server_url | length > 0
+      - rke2_token | length > 0
+    fail_msg: "rke2 agents require rke2_server_url (e.g. https://<master-ip>:9345) and rke2_token."
+  when:
+    - rke2_desired_state == "present"
+    - rke2_node_type == "agent"
+
+- name: Uninstall RKE2 when state is absent
+  block:
+    - name: Check for RKE2 uninstall script
+      stat:
+        path: /usr/local/bin/rke2-uninstall.sh
+      register: rke2_uninstall_script
+
+    - name: Run RKE2 uninstall script
+      command: /usr/local/bin/rke2-uninstall.sh
+      changed_when: true
+      become: true
+      when: rke2_uninstall_script.stat.exists
+
+    - name: Remove RKE2 config directory
+      file:
+        path: /etc/rancher/rke2
+        state: absent
+      become: true
+  when: rke2_desired_state == "absent"
+
+- name: Install and configure RKE2
+  block:
+    - name: Ensure RKE2 dependencies are installed (Ubuntu)
+      apt:
+        name:
+          - curl
+          - iptables
+          - socat
+          - conntrack
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      retries: 5
+      delay: 10
+      register: rke2_apt_deps
+      until: rke2_apt_deps is not failed
+
+    - name: Check if RKE2 binary is already installed
+      stat:
+        path: /usr/local/bin/rke2
+      register: rke2_binary
+
+    - name: Install RKE2 via official install script
+      shell: |
+        set -o pipefail
+        curl -sfL {{ rke2_install_script_url | quote }} | sh -
+      args:
+        executable: /bin/bash
+      environment:
+        INSTALL_RKE2_TYPE: "{{ rke2_node_type }}"
+        INSTALL_RKE2_VERSION: "{{ rke2_version }}"
+        INSTALL_RKE2_CHANNEL: "{{ rke2_channel | default('stable') }}"
+      become: true
+      retries: 3
+      delay: 10
+      register: rke2_installer
+      until: rke2_installer is not failed
+      changed_when: not rke2_binary.stat.exists
+      when: not rke2_binary.stat.exists or (rke2_version | length > 0)
+
+    - name: Ensure RKE2 config directory exists
+      file:
+        path: "{{ rke2_config_path | dirname }}"
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Build RKE2 base config
+      set_fact:
+        rke2_base_config: >-
+          {{
+            {}
+            | combine({'server': rke2_server_url}, recursive=true) if (rke2_server_url | length > 0) else {}
+            | combine({'token': rke2_token}, recursive=true) if (rke2_token | length > 0) else {}
+          }}
+
+    - name: Write RKE2 config file
+      copy:
+        dest: "{{ rke2_config_path }}"
+        mode: "0600"
+        content: "{{ (rke2_base_config | combine(rke2_config_extra | default({}), recursive=true)) | to_nice_yaml(indent=2) }}"
+      become: true
+      notify: Restart RKE2 service
+
+    - name: Read current ufw status
+      command: ufw status
+      register: rke2_ufw_status
+      changed_when: false
+      become: true
+      when: rke2_firewall_manage | bool
+
+    - name: Open RKE2 firewall ports (server)
+      command: "ufw allow {{ item }}"
+      loop:
+        - 6443/tcp
+        - 9345/tcp
+        - 10250/tcp
+        - 8472/udp
+        - 51820/udp
+        - 51821/udp
+        - 2379:2380/tcp
+        - 30000:32767/tcp
+        - 30000:32767/udp
+      become: true
+      when:
+        - rke2_firewall_manage | bool
+        - rke2_node_type == "server"
+        - item not in rke2_ufw_status.stdout
+
+    - name: Open RKE2 firewall ports (agent)
+      command: "ufw allow {{ item }}"
+      loop:
+        - 10250/tcp
+        - 8472/udp
+        - 51820/udp
+        - 51821/udp
+        - 30000:32767/tcp
+        - 30000:32767/udp
+      become: true
+      when:
+        - rke2_firewall_manage | bool
+        - rke2_node_type == "agent"
+        - item not in rke2_ufw_status.stdout
+
+    - name: Reload systemd after RKE2 install
+      systemd:
+        daemon_reload: true
+      become: true
+
+    - name: Enable and start RKE2 service
+      systemd:
+        name: "{{ rke2_service_name }}.service"
+        state: started
+        enabled: true
+      become: true
+
+    - name: Link RKE2 kubectl/crictl binaries into PATH
+      file:
+        src: "/var/lib/rancher/rke2/bin/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        state: link
+      loop:
+        - kubectl
+        - crictl
+        - ctr
+      become: true
+      ignore_errors: true
+      when: rke2_kubectl_link | bool
+
+    - name: Wait for RKE2 node-token on servers
+      wait_for:
+        path: /var/lib/rancher/rke2/server/node-token
+        timeout: 120
+      become: true
+      when: rke2_node_type == "server"
+
+    - name: Show join info for servers
+      debug:
+        msg: "RKE2 {{ rke2_node_type }} is running. Retrieve the worker join token with: sudo cat /var/lib/rancher/rke2/server/node-token"
+      when: rke2_node_type == "server"
+  when: rke2_desired_state == "present"

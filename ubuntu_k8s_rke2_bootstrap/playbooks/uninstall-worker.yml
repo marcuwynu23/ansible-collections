@@ -1,0 +1,14 @@
+---
+# Removes RKE2 from the [worker] group (rke2-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-worker.yml
+- name: Uninstall RKE2 worker (agent) node on Ubuntu
+  hosts: worker
+  become: true
+  vars:
+    containerd_enabled: false
+    containerd_state: absent
+    rke2_type: agent
+    rke2_state: absent
+  roles:
+    - roles/rke2
+    - roles/containerd

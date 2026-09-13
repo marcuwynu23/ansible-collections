@@ -1,0 +1,14 @@
+---
+# Removes RKE2 from the [master] group (rke2-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-master.yml
+- name: Uninstall RKE2 master (control-plane) node on Ubuntu
+  hosts: master
+  become: true
+  vars:
+    containerd_enabled: false
+    containerd_state: absent
+    rke2_type: server
+    rke2_state: absent
+  roles:
+    - roles/rke2
+    - roles/containerd
