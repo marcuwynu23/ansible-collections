@@ -1,0 +1,112 @@
+name: ubuntu_k8s_rke2_bootstrap
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'ubuntu_k8s_rke2_bootstrap/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'ubuntu_k8s_rke2_bootstrap/**'
+  workflow_dispatch:
+    inputs:
+      playbook:
+        description: Playbook to run
+        required: true
+        default: install-master
+        type: choice
+        options:
+        - install-master
+        - install-worker
+        - uninstall-master
+        - uninstall-worker
+      host:
+        description: Target server IP/hostname
+        required: true
+      ansible_user:
+        description: SSH username
+        required: true
+        default: ubuntu
+      rke2_server_url:
+        description: RKE2 server URL (workers only, e.g. https://192.168.1.100:9345)
+        required: false
+        default: ''
+      rke2_token:
+        description: RKE2 node-token (workers only)
+        required: false
+        default: ''
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install ansible
+
+    - name: Build and install collection
+      run: |
+        cd ubuntu_k8s_rke2_bootstrap
+        ansible-galaxy collection build
+        ansible-galaxy collection install marcuwynu23-ubuntu_k8s_rke2_bootstrap-*.tar.gz
+
+    - name: Syntax check playbooks
+      run: |
+        cd ubuntu_k8s_rke2_bootstrap
+        for playbook in install-master install-worker uninstall-master uninstall-worker; do
+          echo "Checking playbooks/${playbook}.yml"
+          ansible-playbook playbooks/${playbook}.yml --syntax-check
+        done
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Ansible
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install ansible
+
+    - name: Build and install collection
+      run: |
+        cd ubuntu_k8s_rke2_bootstrap
+        ansible-galaxy collection build
+        ansible-galaxy collection install marcuwynu23-ubuntu_k8s_rke2_bootstrap-*.tar.gz
+
+    - name: Create inventory
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ github.event.inputs.host }} >> ~/.ssh/known_hosts
+        GROUP=master
+        if [[ "${{ github.event.inputs.playbook }}" == *"-worker" ]]; then
+          GROUP=worker
+        fi
+        cat > inventory.ini <<EOF
+        [${GROUP}]
+        ${{ github.event.inputs.host }} ansible_user=${{ github.event.inputs.ansible_user }} ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+        [${GROUP}:vars]
+        ansible_python_interpreter=/usr/bin/python3
+        EOF
+
+    - name: Run ${{ github.event.inputs.playbook }} playbook
+      run: |
+        EXTRA_ARGS=""
+        if [ -n "${{ github.event.inputs.rke2_server_url }}" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS -e rke2_server_url=${{ github.event.inputs.rke2_server_url }}"
+        fi
+        if [ -n "${{ github.event.inputs.rke2_token }}" ]; then
+          EXTRA_ARGS="$EXTRA_ARGS -e rke2_token=${{ github.event.inputs.rke2_token }}"
+        fi
+        cd ubuntu_k8s_rke2_bootstrap
+        ansible-playbook playbooks/${{ github.event.inputs.playbook }}.yml \
+          -i ../inventory.ini $EXTRA_ARGS
