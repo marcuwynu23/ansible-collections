@@ -63,6 +63,7 @@ Each collection contains a playbook that calls multiple roles to install and con
     <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>fedora_k8s_k3s_bootstrap</code></td><td style="padding:6px 12px;">K3s cluster on Fedora (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/fedora_k8s_k3s_bootstrap">galaxy</a></td></tr>
     <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>fedora_k8s_rke2_bootstrap</code></td><td style="padding:6px 12px;">RKE2 cluster on Fedora (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/fedora_k8s_rke2_bootstrap">galaxy</a></td></tr>
     <tr style="border-bottom: 1px solid #eee;"><td style="padding:6px 12px;"><code>ubuntu_k8s_rke2_bootstrap</code></td><td style="padding:6px 12px;">RKE2 cluster on Ubuntu (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/ubuntu_k8s_rke2_bootstrap">galaxy</a></td></tr>
+    <tr><td style="padding:6px 12px;"><code>ubuntu_k8s_k3s_bootstrap</code></td><td style="padding:6px 12px;">K3s cluster on Ubuntu (master + worker)</td><td style="padding:6px 12px;"><a href="https://galaxy.ansible.com/ui/repo/published/marcuwynu23/ubuntu_k8s_k3s_bootstrap">galaxy</a></td></tr>
 
   </tbody>
 </table>
@@ -85,6 +86,7 @@ Each collection has its own GitHub Actions workflow that runs on pushes and pull
 | `fedora_k8s_k3s_bootstrap`    | [![fedora_k8s_k3s_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_k3s_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_k3s_bootstrap.yml)          |
 | `fedora_k8s_rke2_bootstrap`   | [![fedora_k8s_rke2_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_rke2_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/fedora_k8s_rke2_bootstrap.yml)       |
 | `ubuntu_k8s_rke2_bootstrap`   | [![ubuntu_k8s_rke2_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_rke2_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_rke2_bootstrap.yml)       |
+| `ubuntu_k8s_k3s_bootstrap`    | [![ubuntu_k8s_k3s_bootstrap](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_k3s_bootstrap.yml/badge.svg)](https://github.com/marcuwynu23/ansible-collections/actions/workflows/ubuntu_k8s_k3s_bootstrap.yml)          |
 
 Each workflow runs two jobs:
 
