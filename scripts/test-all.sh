@@ -13,6 +13,10 @@ COLLECTIONS=(
   "podman_bootstrap"
   "kubernetes_helm_bootstrap"
   "observability_bootstrap"
+  "fedora_k8s_k3s_bootstrap"
+  "fedora_k8s_rke2_bootstrap"
+  "ubuntu_k8s_k3s_bootstrap"
+  "ubuntu_k8s_rke2_bootstrap"
 )
 
 # Function to test a single collection
@@ -21,25 +25,39 @@ test_collection() {
   echo -e "\nTesting $COLLECTION..."
   
   cd "$(dirname "$0")/../$COLLECTION" || return
-  
-  # Test install playbook
-  echo "  - install-check.yml"
-  if ansible-playbook tests/install-check.yml --syntax-check; then
-    echo "  ✓ install-check.yml OK"
+
+  # App-server style collections: tests/install-check.yml + uninstall-check.yml
+  if [ -f tests/install-check.yml ]; then
+    # Test install playbook
+    echo "  - install-check.yml"
+    if ansible-playbook tests/install-check.yml --syntax-check; then
+      echo "  ✓ install-check.yml OK"
+    else
+      echo "  ✗ install-check.yml FAILED"
+      return 1
+    fi
+
+    # Test uninstall playbook
+    echo "  - uninstall.yml"
+    if ansible-playbook tests/uninstall-check.yml --syntax-check; then
+      echo "  ✓ uninstall-check.yml OK"
+    else
+      echo "  ✗ uninstall-check.yml FAILED"
+      return 1
+    fi
   else
-    echo "  ✗ install-check.yml FAILED"
-    return 1
+    # K8s style collections: install/uninstall master/worker playbooks
+    for PLAYBOOK in install-master install-worker uninstall-master uninstall-worker; do
+      echo "  - playbooks/${PLAYBOOK}.yml"
+      if ansible-playbook "playbooks/${PLAYBOOK}.yml" --syntax-check; then
+        echo "  ✓ playbooks/${PLAYBOOK}.yml OK"
+      else
+        echo "  ✗ playbooks/${PLAYBOOK}.yml FAILED"
+        return 1
+      fi
+    done
   fi
-  
-  # Test uninstall playbook
-  echo "  - uninstall.yml"
-  if ansible-playbook tests/uninstall-check.yml --syntax-check; then
-    echo "  ✓ uninstall-check.yml OK"
-  else
-    echo "  ✗ uninstall-check.yml FAILED"
-    return 1
-  fi
-  
+
   echo "  ✓ $COLLECTION OK"
   cd - > /dev/null || return
 }

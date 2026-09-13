@@ -13,6 +13,10 @@ if [ -z "$1" ]; then
   echo "  - podman_bootstrap"
   echo "  - kubernetes_helm_bootstrap"
   echo "  - observability_bootstrap"
+  echo "  - fedora_k8s_k3s_bootstrap"
+  echo "  - fedora_k8s_rke2_bootstrap"
+  echo "  - ubuntu_k8s_k3s_bootstrap"
+  echo "  - ubuntu_k8s_rke2_bootstrap"
   exit 1
 fi
 
