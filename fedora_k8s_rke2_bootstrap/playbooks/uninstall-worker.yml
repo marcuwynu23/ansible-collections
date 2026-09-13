@@ -1,0 +1,12 @@
+---
+- name: Uninstall RKE2 worker (agent) node on Fedora
+  hosts: worker
+  become: true
+  vars:
+    containerd_enabled: false
+    containerd_state: absent
+    rke2_type: agent
+    rke2_state: absent
+  roles:
+    - roles/rke2
+    - roles/containerd

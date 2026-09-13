@@ -1,0 +1,6 @@
+---
+- name: Restart RKE2 service
+  systemd:
+    name: "{{ 'rke2-server' if (rke2_type | default('server')) == 'server' else 'rke2-agent' }}"
+    state: restarted
+  become: true

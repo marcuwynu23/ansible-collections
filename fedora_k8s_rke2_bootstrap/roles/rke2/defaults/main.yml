@@ -1,0 +1,17 @@
+---
+# defaults file for rke2 (Fedora)
+# rke2_type: "server" for control-plane, "agent" for workers.
+rke2_type: server
+rke2_state: present
+# Empty means latest stable. Example: "v1.30.2+rke2r1".
+rke2_version: ""
+rke2_channel: stable
+rke2_install_script_url: https://get.rke2.io
+# Required for agents and for additional servers joining a cluster.
+rke2_server_url: ""
+rke2_token: ""
+# Extra keys merged into /etc/rancher/rke2/config.yaml (e.g. {tls-san: [k8s.example.com], cni: [canal]}).
+rke2_config_extra: {}
+rke2_config_path: /etc/rancher/rke2/config.yaml
+rke2_firewall_manage: true
+rke2_kubectl_link: true

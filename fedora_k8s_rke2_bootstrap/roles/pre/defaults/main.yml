@@ -1,0 +1,39 @@
+---
+# defaults file for pre (Fedora K8s node preparation)
+pre_hostname: ""
+pre_update_system: true
+pre_disable_swap: true
+pre_selinux_state: permissive
+pre_firewall_manage: true
+pre_base_packages:
+  - curl
+  - iptables
+  - iptables-nft
+  - socat
+  - conntrack-tools
+  - policycoreutils
+  - policycoreutils-python-utils
+  - firewalld
+  - NetworkManager
+  - ca-certificates
+  - tar
+pre_kernel_modules:
+  - overlay
+  - br_netfilter
+pre_sysctl_params:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1
+# RKE2 ports opened when pre_firewall_manage is true.
+# 6443 API, 9345 supervisor, 10250 kubelet, 8472/51820/51821 flannel/wireguard,
+# 30000-32767 NodePorts, 2379-2380 etcd (masters).
+pre_firewall_ports:
+  - 6443/tcp
+  - 9345/tcp
+  - 10250/tcp
+  - 8472/udp
+  - 51820/udp
+  - 51821/udp
+  - 30000-32767/tcp
+  - 30000-32767/udp
+  - 2379-2380/tcp

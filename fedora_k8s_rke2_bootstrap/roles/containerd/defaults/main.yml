@@ -1,0 +1,9 @@
+---
+# defaults file for containerd (Fedora)
+# NOTE: RKE2 ships and manages its own embedded containerd. Set
+# containerd_enabled: false when using RKE2 to avoid conflicts, or keep
+# true if you want a standalone system containerd as well.
+containerd_state: present
+containerd_enabled: true
+containerd_config_path: /etc/containerd/config.toml
+containerd_systemd_cgroup: true
