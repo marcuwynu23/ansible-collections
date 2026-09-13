@@ -1,38 +1,60 @@
-Role Name
-=========
+# rke2 role
 
-A brief description of the role goes here.
+Installs RKE2 on Fedora via the official `get.rke2.io` script: a `server`
+(control-plane) or an `agent` (worker). Writes
+`/etc/rancher/rke2/config.yaml`, then enables `rke2-server` / `rke2-agent`
+via systemd.
 
-Requirements
-------------
+## Layout on the target
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+| Path | Purpose |
+|------|---------|
+| `/etc/rancher/rke2/config.yaml` | Node config (`server:`, `token:`, plus `rke2_config_extra`) |
+| `/var/lib/rancher/rke2/server/node-token` | Cluster join token (servers only) |
+| `/etc/rancher/rke2/rke2.yaml` | Kubeconfig (servers only) |
+| `/usr/local/bin/rke2-uninstall.sh` | Uninstall script used when `rke2_state: absent` |
 
-Role Variables
---------------
+## Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `rke2_type` | `server` | `server` or `agent` |
+| `rke2_state` | `present` | `present` installs, `absent` uninstalls |
+| `rke2_version` | `""` (latest stable) | Pin e.g. `v1.30.2+rke2r1` |
+| `rke2_channel` | `stable` | `INSTALL_RKE2_CHANNEL` for the install script |
+| `rke2_install_script_url` | `https://get.rke2.io` | Install script source |
+| `rke2_server_url` | `""` | e.g. `https://192.168.1.100:9345` — required for agents and extra servers |
+| `rke2_token` | `""` | Cluster token — required for agents and extra servers |
+| `rke2_config_extra` | `{}` | Merged into `config.yaml` (e.g. `{tls-san: [k8s.example.com], cni: [canal]}`) |
+| `rke2_config_path` | `/etc/rancher/rke2/config.yaml` | Config file location |
+| `rke2_firewall_manage` | `true` | Open RKE2 firewall ports per node type |
+| `rke2_kubectl_link` | `true` | Symlink `kubectl`/`crictl`/`ctr` into `/usr/local/bin` |
 
-Dependencies
-------------
+Agents need both `rke2_server_url` and `rke2_token`; the role fails fast with
+a clear message when they are missing.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Example
 
-Example Playbook
-----------------
+```yaml
+# Control-plane:
+- hosts: master
+  become: true
+  roles:
+    - role: roles/rke2
+      vars:
+        rke2_type: server
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+# Worker:
+- hosts: worker
+  become: true
+  roles:
+    - role: roles/rke2
+      vars:
+        rke2_type: agent
+        rke2_server_url: https://192.168.1.100:9345
+        rke2_token: <node-token>
+```
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+## License
 
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+MIT. Author: Mark Wayne.

@@ -1,4 +1,6 @@
 ---
+# Removes RKE2 from the [worker] group (rke2-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-worker.yml
 - name: Uninstall RKE2 worker (agent) node on Fedora
   hosts: worker
   become: true

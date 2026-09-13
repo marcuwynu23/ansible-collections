@@ -1,4 +1,9 @@
 ---
+# Joins RKE2 workers on the [worker] group to an existing server.
+# Requires rke2_server_url + rke2_token (override with -e), see vars below.
+# Usage:
+#   ansible-playbook -i inventory.ini playbooks/install-worker.yml \
+#     -e rke2_server_url=https://192.168.1.100:9345 -e rke2_token=<node-token>
 - name: Install RKE2 worker (agent) node on Fedora
   hosts: worker
   become: true

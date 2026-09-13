@@ -1,38 +1,47 @@
-Role Name
-=========
+# pre role
 
-A brief description of the role goes here.
+Fedora OS preparation for RKE2 Kubernetes nodes. Replaces manual setup:
+hostname, system updates, swap, kernel modules, sysctl, SELinux, firewall,
+and NetworkManager. Uses `dnf`/`firewalld` (no `apt`/`netplan`).
 
-Requirements
-------------
+## What it does
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+- Asserts the target is Fedora / RHEL family.
+- Optionally sets the hostname (`pre_hostname`).
+- Optionally upgrades all packages (`dnf upgrade`).
+- Installs base packages (curl, iptables, socat, conntrack-tools, firewalld, ...).
+- Disables swap at runtime and removes it from `/etc/fstab` (required by Kubernetes).
+- Persists/loads `overlay` + `br_netfilter` kernel modules.
+- Applies sysctl (`ip_forward`, bridge-nf-call) via `/etc/sysctl.d/99-k8s-rke2.conf`.
+- Sets SELinux mode (default `permissive`, RKE2/K3s friendly).
+- Opens RKE2 firewall ports (6443 API, 9345 supervisor, 10250 kubelet, flannel/wireguard, NodePorts, etcd).
+- Ensures `firewalld` and `NetworkManager` are running.
 
-Role Variables
---------------
+## Variables
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `pre_hostname` | `""` (skip) | Hostname to set |
+| `pre_update_system` | `true` | Run `dnf upgrade` |
+| `pre_disable_swap` | `true` | Disable swap now and in fstab |
+| `pre_selinux_state` | `permissive` | `permissive` / `enforcing` / `disabled` |
+| `pre_firewall_manage` | `true` | Manage firewalld + RKE2 ports |
+| `pre_base_packages` | (list) | Packages installed via dnf |
+| `pre_kernel_modules` | `[overlay, br_netfilter]` | Modules to persist and load |
+| `pre_sysctl_params` | (dict) | Sysctl keys written to `99-k8s-rke2.conf` |
+| `pre_firewall_ports` | (list) | Ports opened when `pre_firewall_manage` is true |
 
-Dependencies
-------------
+## Example
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+```yaml
+- hosts: master
+  become: true
+  roles:
+    - role: roles/pre
+      vars:
+        pre_hostname: k8s-master-1
+```
 
-Example Playbook
-----------------
+## License
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+MIT. Author: Mark Wayne.

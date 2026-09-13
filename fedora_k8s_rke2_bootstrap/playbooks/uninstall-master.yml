@@ -1,4 +1,6 @@
 ---
+# Removes RKE2 from the [master] group (rke2-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-master.yml
 - name: Uninstall RKE2 master (control-plane) node on Fedora
   hosts: master
   become: true

@@ -1,4 +1,8 @@
 ---
+# Installs the RKE2 control-plane on the [master] group (first or additional server).
+# Usage:
+#   cp playbooks/inventory.ini.example inventory.ini  # adjust hosts/key
+#   ansible-playbook -i inventory.ini playbooks/install-master.yml
 - name: Install RKE2 master (control-plane) node on Fedora
   hosts: master
   become: true
