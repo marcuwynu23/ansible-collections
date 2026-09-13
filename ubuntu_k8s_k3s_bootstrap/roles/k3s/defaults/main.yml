@@ -1,0 +1,17 @@
+---
+# defaults file for k3s (Ubuntu)
+# k3s_type: "server" for control-plane, "agent" for workers.
+k3s_type: server
+k3s_state: present
+# Empty means latest stable. Example: "v1.30.2+k3s1".
+k3s_version: ""
+k3s_channel: stable
+k3s_install_script_url: https://get.k3s.io
+# Required for agents and for additional servers joining a cluster.
+k3s_server_url: ""
+k3s_token: ""
+# Extra keys merged into /etc/rancher/k3s/config.yaml
+# (e.g. {tls-san: [k8s.example.com], cluster-init: true, disable: [traefik]}).
+k3s_config_extra: {}
+k3s_config_path: /etc/rancher/k3s/config.yaml
+k3s_firewall_manage: true

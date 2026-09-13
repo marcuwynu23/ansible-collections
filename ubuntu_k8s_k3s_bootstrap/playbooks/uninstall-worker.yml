@@ -1,0 +1,14 @@
+---
+# Removes K3s from the [worker] group (k3s-agent-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-worker.yml
+- name: Uninstall K3s worker (agent) node on Ubuntu
+  hosts: worker
+  become: true
+  vars:
+    containerd_enabled: false
+    containerd_state: absent
+    k3s_type: agent
+    k3s_state: absent
+  roles:
+    - roles/k3s
+    - roles/containerd

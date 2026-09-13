@@ -1,0 +1,6 @@
+---
+- name: Restart K3s service
+  systemd:
+    name: "{{ 'k3s' if (k3s_type | default('server')) == 'server' else 'k3s-agent' }}"
+    state: restarted
+  become: true

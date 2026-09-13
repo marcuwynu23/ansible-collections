@@ -1,0 +1,35 @@
+---
+# Joins K3s workers on the [worker] group to an existing server.
+# Requires k3s_server_url + k3s_token (override with -e), see vars below.
+# Usage:
+#   ansible-playbook -i inventory.ini playbooks/install-worker.yml \
+#     -e k3s_server_url=https://192.168.1.100:6443 -e k3s_token=<node-token>
+- name: Install K3s worker (agent) node on Ubuntu
+  hosts: worker
+  become: true
+  vars:
+    # Standalone containerd is not needed: K3s ships its own embedded
+    # containerd. Set to true only if you also want system containerd.
+    containerd_enabled: false
+    containerd_state: present
+    k3s_type: agent
+    k3s_state: present
+    k3s_version: ""
+    # Required: point at an existing K3s server and use its node-token.
+    # Retrieve it on the master with:
+    #   sudo cat /var/lib/rancher/k3s/server/node-token
+    k3s_server_url: "https://192.168.1.100:6443"
+    k3s_token: "<paste-master-node-token>"
+    k3s_config_extra: {}
+  roles:
+    - roles/pre
+    - roles/containerd
+    - roles/k3s
+  pre_tasks:
+    - name: Require K3s join variables for workers
+      assert:
+        that:
+          - k3s_server_url | length > 0
+          - k3s_token | length > 0
+          - k3s_token != "<paste-master-node-token>"
+        fail_msg: "Set k3s_server_url and k3s_token (from the master's node-token) to join workers."

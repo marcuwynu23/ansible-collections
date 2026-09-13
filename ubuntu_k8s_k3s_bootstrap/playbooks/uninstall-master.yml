@@ -1,0 +1,14 @@
+---
+# Removes K3s from the [master] group (k3s-uninstall.sh).
+# Usage: ansible-playbook -i inventory.ini playbooks/uninstall-master.yml
+- name: Uninstall K3s master (control-plane) node on Ubuntu
+  hosts: master
+  become: true
+  vars:
+    containerd_enabled: false
+    containerd_state: absent
+    k3s_type: server
+    k3s_state: absent
+  roles:
+    - roles/k3s
+    - roles/containerd

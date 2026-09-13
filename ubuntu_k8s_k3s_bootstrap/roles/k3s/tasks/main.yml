@@ -1,0 +1,199 @@
+---
+# tasks file for k3s (Ubuntu).
+# Installs a K3s server (control-plane) or agent (worker) via get.k3s.io,
+# writes /etc/rancher/k3s/config.yaml and enables the systemd service.
+# NOTE: the install script starts the service itself, so config.yaml is
+# written BEFORE the installer runs.
+
+- name: Set K3s facts
+  set_fact:
+    k3s_desired_state: "{{ k3s_state | default('present') }}"
+    k3s_node_type: "{{ k3s_type | default('server') | lower }}"
+    k3s_service_name: "{{ 'k3s' if (k3s_type | default('server') | lower) == 'server' else 'k3s-agent' }}"
+    k3s_uninstall_script: "{{ '/usr/local/bin/k3s-uninstall.sh' if (k3s_type | default('server') | lower) == 'server' else '/usr/local/bin/k3s-agent-uninstall.sh' }}"
+
+- name: Validate k3s_type
+  assert:
+    that:
+      - k3s_node_type in ["server", "agent"]
+    fail_msg: "k3s_type must be 'server' or 'agent' (got '{{ k3s_type }}')."
+
+- name: Validate agent join variables
+  assert:
+    that:
+      - k3s_server_url | length > 0
+      - k3s_token | length > 0
+    fail_msg: "k3s agents require k3s_server_url (e.g. https://<master-ip>:6443) and k3s_token."
+  when:
+    - k3s_desired_state == "present"
+    - k3s_node_type == "agent"
+
+- name: Uninstall K3s when state is absent
+  block:
+    - name: Check for K3s uninstall script
+      stat:
+        path: "{{ k3s_uninstall_script }}"
+      register: k3s_uninstall_script_stat
+
+    - name: Run K3s uninstall script
+      command: "{{ k3s_uninstall_script }}"
+      changed_when: true
+      become: true
+      when: k3s_uninstall_script_stat.stat.exists
+
+    - name: Remove K3s config directory
+      file:
+        path: /etc/rancher/k3s
+        state: absent
+      become: true
+  when: k3s_desired_state == "absent"
+
+- name: Install and configure K3s
+  block:
+    - name: Ensure K3s dependencies are installed (Ubuntu)
+      apt:
+        name:
+          - curl
+          - iptables
+          - socat
+          - conntrack
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      retries: 5
+      delay: 10
+      register: k3s_apt_deps
+      until: k3s_apt_deps is not failed
+
+    - name: Check if K3s binary is already installed
+      stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary
+
+    - name: Ensure K3s config directory exists
+      file:
+        path: "{{ k3s_config_path | dirname }}"
+        state: directory
+        mode: "0755"
+      become: true
+
+    - name: Build K3s base config
+      set_fact:
+        k3s_base_config: >-
+          {{
+            {}
+            | combine({'server': k3s_server_url}, recursive=true) if (k3s_server_url | length > 0) else {}
+            | combine({'token': k3s_token}, recursive=true) if (k3s_token | length > 0) else {}
+          }}
+
+    - name: Write K3s config file (before install, the script starts the service)
+      copy:
+        dest: "{{ k3s_config_path }}"
+        mode: "0600"
+        content: "{{ (k3s_base_config | combine(k3s_config_extra | default({}), recursive=true)) | to_nice_yaml(indent=2) }}"
+      become: true
+      notify: Restart K3s service
+
+    - name: Install K3s server via official install script
+      shell: |
+        set -o pipefail
+        curl -sfL {{ k3s_install_script_url | quote }} | sh -
+      args:
+        executable: /bin/bash
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_CHANNEL: "{{ k3s_channel | default('stable') }}"
+      become: true
+      retries: 3
+      delay: 10
+      register: k3s_installer
+      until: k3s_installer is not failed
+      changed_when: not k3s_binary.stat.exists
+      when:
+        - k3s_node_type == "server"
+        - not k3s_binary.stat.exists or (k3s_version | length > 0)
+
+    - name: Install K3s agent via official install script
+      shell: |
+        set -o pipefail
+        curl -sfL {{ k3s_install_script_url | quote }} | sh -
+      args:
+        executable: /bin/bash
+      environment:
+        INSTALL_K3S_VERSION: "{{ k3s_version }}"
+        INSTALL_K3S_CHANNEL: "{{ k3s_channel | default('stable') }}"
+        K3S_URL: "{{ k3s_server_url }}"
+        K3S_TOKEN: "{{ k3s_token }}"
+      become: true
+      retries: 3
+      delay: 10
+      register: k3s_agent_installer
+      until: k3s_agent_installer is not failed
+      changed_when: not k3s_binary.stat.exists
+      when:
+        - k3s_node_type == "agent"
+        - not k3s_binary.stat.exists or (k3s_version | length > 0)
+
+    - name: Read current ufw status
+      command: ufw status
+      register: k3s_ufw_status
+      changed_when: false
+      become: true
+      when: k3s_firewall_manage | bool
+
+    - name: Open K3s firewall ports (server)
+      command: "ufw allow {{ item }}"
+      loop:
+        - 6443/tcp
+        - 10250/tcp
+        - 8472/udp
+        - 51820:51821/udp
+        - 5001/tcp
+        - 2379:2380/tcp
+        - 30000:32767/tcp
+        - 30000:32767/udp
+      become: true
+      when:
+        - k3s_firewall_manage | bool
+        - k3s_node_type == "server"
+        - item not in k3s_ufw_status.stdout
+
+    - name: Open K3s firewall ports (agent)
+      command: "ufw allow {{ item }}"
+      loop:
+        - 10250/tcp
+        - 8472/udp
+        - 51820:51821/udp
+        - 30000:32767/tcp
+        - 30000:32767/udp
+      become: true
+      when:
+        - k3s_firewall_manage | bool
+        - k3s_node_type == "agent"
+        - item not in k3s_ufw_status.stdout
+
+    - name: Reload systemd after K3s install
+      systemd:
+        daemon_reload: true
+      become: true
+
+    - name: Enable and start K3s service
+      systemd:
+        name: "{{ k3s_service_name }}.service"
+        state: started
+        enabled: true
+      become: true
+
+    - name: Wait for K3s node-token on servers
+      wait_for:
+        path: /var/lib/rancher/k3s/server/node-token
+        timeout: 120
+      become: true
+      when: k3s_node_type == "server"
+
+    - name: Show join info for servers
+      debug:
+        msg: "K3s {{ k3s_node_type }} is running. Kubeconfig: /etc/rancher/k3s/k3s.yaml. Worker join token: sudo cat /var/lib/rancher/k3s/server/node-token"
+      when: k3s_node_type == "server"
+  when: k3s_desired_state == "present"

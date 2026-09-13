@@ -1,0 +1,36 @@
+---
+# defaults file for pre (Ubuntu K8s node preparation)
+pre_hostname: ""
+pre_update_system: true
+pre_disable_swap: true
+pre_firewall_manage: true
+# Allowed before ufw is enabled so SSH is never cut off. Set to ""
+# to skip (e.g. when using a non-standard port, allow it yourself first).
+pre_firewall_allow_ssh_port: "22/tcp"
+pre_base_packages:
+  - curl
+  - iptables
+  - socat
+  - conntrack
+  - gnupg
+  - ca-certificates
+  - tar
+  - ufw
+pre_kernel_modules:
+  - overlay
+  - br_netfilter
+pre_sysctl_params:
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+  net.ipv4.ip_forward: 1
+# K3s ports opened when pre_firewall_manage is true (ufw range syntax).
+# 6443 API, 10250 kubelet, 8472/51820-51821 flannel/wireguard,
+# 30000-32767 NodePorts, 2379-2380 etcd (HA masters).
+pre_firewall_ports:
+  - 6443/tcp
+  - 10250/tcp
+  - 8472/udp
+  - 51820:51821/udp
+  - 30000:32767/tcp
+  - 30000:32767/udp
+  - 2379:2380/tcp
